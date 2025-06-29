@@ -1,0 +1,26 @@
+{
+  "name": "pdf-management-app",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "^8.2.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "@google-cloud/documentai": "^8.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@tailwindcss/typography": "^0.5.10",
+    "astro": "^5.2.5",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.3.31",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.26.9"
+  }
+}
