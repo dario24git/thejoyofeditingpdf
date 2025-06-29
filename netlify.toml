@@ -1,0 +1,13 @@
+[build]
+  command = "npx astro build"
+  publish = "dist"
+
+[functions]
+  # Exclude Supabase functions from Netlify's function bundling
+  # These should run on Supabase's platform, not Netlify
+  ignore = "supabase/functions/**"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
