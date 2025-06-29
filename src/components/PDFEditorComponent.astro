@@ -146,7 +146,7 @@ const { pdfId, pdfName } = Astro.props;
             </div>
           </div>
 
-          <!-- Text Transform (REMOVED CAPITALIZE) -->
+          <!-- Text Transform -->
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Text Transform</label>
             <select id="text-transform" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
@@ -212,6 +212,13 @@ const { pdfId, pdfName } = Astro.props;
             <div>Confidence: <span id="confidence-score">-</span></div>
             <div>Original: <span id="original-text" class="italic">-</span></div>
           </div>
+
+          <!-- Delete Text Box Button -->
+          <div class="pt-3 border-t">
+            <button id="delete-text-box" class="w-full px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+              Delete Text Box
+            </button>
+          </div>
         </div>
       </div>
 
@@ -251,11 +258,27 @@ const { pdfId, pdfName } = Astro.props;
         </div>
       </div>
 
-      <!-- Form Fields Panel -->
-      <div id="form-fields" class="p-4">
-        <h3 class="text-sm font-medium text-gray-900 mb-3">Add Form Fields</h3>
+      <!-- Tools Panel -->
+      <div id="tools-panel" class="p-4">
+        <h3 class="text-sm font-medium text-gray-900 mb-3">Add Elements</h3>
         
+        <!-- Text Box Tool -->
+        <div class="space-y-2 mb-4">
+          <button id="add-text-box" class="w-full text-left px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 rounded border border-blue-200">
+            <div class="font-medium flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+              </svg>
+              Text Box
+            </div>
+            <div class="text-xs text-gray-500">Add new text anywhere on the PDF</div>
+          </button>
+        </div>
+
+        <!-- Form Fields -->
         <div class="space-y-2">
+          <h4 class="text-xs font-medium text-gray-700 mb-2">Form Fields</h4>
+          
           <button id="add-text-field" class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded border">
             <div class="font-medium">Text Field</div>
             <div class="text-xs text-gray-500">Single line text input</div>
@@ -274,8 +297,8 @@ const { pdfId, pdfName } = Astro.props;
 
         <div class="mt-4 text-xs text-gray-500">
           <p><strong>Instructions:</strong></p>
-          <p>1. Click a field type above</p>
-          <p>2. Configure the field settings</p>
+          <p>1. Click a tool above</p>
+          <p>2. Configure the settings</p>
           <p>3. Click on the PDF to place it</p>
           <p>4. Drag the resize handles to adjust size</p>
         </div>
@@ -306,6 +329,48 @@ const { pdfId, pdfName } = Astro.props;
         <button id="retry-btn" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           Retry
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Box Configuration Modal -->
+  <div id="textbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Text Box</h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
+          <textarea id="new-text-content" class="w-full border border-gray-300 rounded px-3 py-2 h-20 resize-none" placeholder="Enter your text here..."></textarea>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+            <input type="number" id="new-font-size" class="w-full border border-gray-300 rounded px-3 py-2" value="14" min="8" max="72">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Text Color</label>
+            <input type="color" id="new-text-color" class="w-full h-10 border border-gray-300 rounded" value="#000000">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Font Family</label>
+          <select id="new-font-family" class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="Times, serif">Times</option>
+            <option value="Courier, monospace">Courier</option>
+            <option value="Helvetica, sans-serif">Helvetica</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Verdana, sans-serif">Verdana</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-3 mt-6">
+        <button id="cancel-textbox" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+        <button id="create-textbox" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Add Text Box</button>
       </div>
     </div>
   </div>
@@ -344,7 +409,7 @@ const { pdfId, pdfName } = Astro.props;
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
-      <span id="placement-text">Click on the PDF to place the field</span>
+      <span id="placement-text">Click on the PDF to place the element</span>
       <button id="cancel-placement" class="ml-2 text-blue-200 hover:text-white">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -385,6 +450,7 @@ const { pdfId, pdfName } = Astro.props;
     const fontFamily = document.getElementById('font-family');
     const confidenceScore = document.getElementById('confidence-score');
     const originalText = document.getElementById('original-text');
+    const deleteTextBoxBtn = document.getElementById('delete-text-box');
 
     // Enhanced text formatting controls
     const fontWeightBtn = document.getElementById('font-weight-btn');
@@ -412,10 +478,22 @@ const { pdfId, pdfName } = Astro.props;
     const dateFormatEdit = document.getElementById('date-format-edit');
     const deleteFormFieldBtn = document.getElementById('delete-form-field');
 
-    // Form field controls
+    // Tool controls
+    const addTextBoxBtn = document.getElementById('add-text-box');
     const addTextFieldBtn = document.getElementById('add-text-field');
     const addCheckboxBtn = document.getElementById('add-checkbox');
     const addDateFieldBtn = document.getElementById('add-date-field');
+
+    // Text box modal controls
+    const textboxModal = document.getElementById('textbox-modal');
+    const newTextContent = document.getElementById('new-text-content');
+    const newFontSize = document.getElementById('new-font-size');
+    const newTextColor = document.getElementById('new-text-color');
+    const newFontFamily = document.getElementById('new-font-family');
+    const cancelTextboxBtn = document.getElementById('cancel-textbox');
+    const createTextboxBtn = document.getElementById('create-textbox');
+
+    // Form field modal controls
     const fieldModal = document.getElementById('field-modal');
     const fieldName = document.getElementById('field-name');
     const dateFormatSection = document.getElementById('date-format-section');
@@ -431,6 +509,7 @@ const { pdfId, pdfName } = Astro.props;
     let editor;
     let isModifyMode = false;
     let pendingFieldType = null;
+    let pendingTextBoxConfig = null;
 
     function showError(message, details = null) {
       loadingText.textContent = message;
@@ -612,8 +691,17 @@ const { pdfId, pdfName } = Astro.props;
       fontSize.value = element.fontSize;
       textColor.value = element.color;
       fontFamily.value = element.fontFamily;
-      confidenceScore.textContent = `${(element.confidence * 100).toFixed(0)}%`;
-      originalText.textContent = element.originalText;
+      
+      // Show OCR info only for OCR-based elements
+      if (element.confidence !== undefined && element.originalText !== undefined) {
+        confidenceScore.textContent = `${(element.confidence * 100).toFixed(0)}%`;
+        originalText.textContent = element.originalText;
+        confidenceScore.parentElement.style.display = 'block';
+        originalText.parentElement.style.display = 'block';
+      } else {
+        confidenceScore.parentElement.style.display = 'none';
+        originalText.parentElement.style.display = 'none';
+      }
 
       // Update enhanced properties
       updateFormattingButtons(element);
@@ -727,6 +815,74 @@ const { pdfId, pdfName } = Astro.props;
       return 'left';
     }
 
+    function showTextBoxModal() {
+      console.log('📝 Showing text box modal');
+      
+      // Reset form
+      newTextContent.value = '';
+      newFontSize.value = '14';
+      newTextColor.value = '#000000';
+      newFontFamily.value = 'Arial, sans-serif';
+      
+      textboxModal.classList.remove('hidden');
+      newTextContent.focus();
+    }
+
+    function hideTextBoxModal() {
+      console.log('❌ Hiding text box modal');
+      
+      textboxModal.classList.add('hidden');
+      pendingTextBoxConfig = null;
+    }
+
+    function createTextBox() {
+      console.log('🔧 Creating text box...');
+      
+      if (!newTextContent.value.trim()) {
+        alert('Please enter some text');
+        return;
+      }
+
+      pendingTextBoxConfig = {
+        text: newTextContent.value.trim(),
+        fontSize: parseInt(newFontSize.value),
+        color: newTextColor.value,
+        fontFamily: newFontFamily.value,
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'left',
+        textTransform: 'none',
+        lineHeight: 1.2,
+        letterSpacing: 0,
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderWidth: 0,
+        borderStyle: 'none',
+        padding: 2,
+        width: 200,
+        height: 30
+      };
+
+      console.log('📋 Text box config created:', pendingTextBoxConfig);
+
+      // Start text box placement mode
+      if (editor && editor.startTextBoxPlacement) {
+        console.log('🎯 Starting text box placement...');
+        editor.startTextBoxPlacement(pendingTextBoxConfig);
+        hideTextBoxModal();
+        
+        // Show placement instructions
+        placementText.textContent = 'Click on the PDF to place the text box';
+        placementInstructions.classList.remove('hidden');
+        
+        console.log('✅ Text box placement mode activated');
+      } else {
+        console.error('❌ Editor or startTextBoxPlacement method not available');
+        alert('Editor not ready. Please try again.');
+      }
+    }
+
     function showFieldModal(fieldType) {
       console.log('📝 Showing field modal for type:', fieldType);
       
@@ -800,11 +956,14 @@ const { pdfId, pdfName } = Astro.props;
       }
     }
 
-    function cancelFieldPlacement() {
-      console.log('🛑 Cancelling field placement from UI');
+    function cancelPlacement() {
+      console.log('🛑 Cancelling placement from UI');
       
       if (editor && editor.cancelFieldPlacement) {
         editor.cancelFieldPlacement();
+      }
+      if (editor && editor.cancelTextBoxPlacement) {
+        editor.cancelTextBoxPlacement();
       }
       placementInstructions.classList.add('hidden');
     }
@@ -816,6 +975,16 @@ const { pdfId, pdfName } = Astro.props;
         editor.removeFormField(editor.selectedFormField.id);
         editor.selectedFormField = null;
         formFieldProperties.classList.add('hidden');
+      }
+    }
+
+    function deleteSelectedTextBox() {
+      if (!editor || !editor.selectedElement) return;
+      
+      if (confirm('Are you sure you want to delete this text box?')) {
+        editor.removeTextElement(editor.selectedElement.id);
+        editor.selectedElement = null;
+        textProperties.classList.add('hidden');
       }
     }
 
@@ -861,8 +1030,26 @@ const { pdfId, pdfName } = Astro.props;
     fieldValueEdit?.addEventListener('input', updateSelectedFormField);
     dateFormatEdit?.addEventListener('change', updateSelectedFormField);
     deleteFormFieldBtn?.addEventListener('click', deleteSelectedFormField);
+    deleteTextBoxBtn?.addEventListener('click', deleteSelectedTextBox);
 
-    // CRITICAL: Form field buttons with enhanced logging
+    // Text box tool
+    addTextBoxBtn?.addEventListener('click', () => {
+      console.log('📝 Text box button clicked');
+      showTextBoxModal();
+    });
+
+    // Text box modal buttons
+    cancelTextboxBtn?.addEventListener('click', () => {
+      console.log('❌ Cancel text box button clicked');
+      hideTextBoxModal();
+    });
+    
+    createTextboxBtn?.addEventListener('click', () => {
+      console.log('✅ Create text box button clicked');
+      createTextBox();
+    });
+
+    // Form field buttons
     addTextFieldBtn?.addEventListener('click', () => {
       console.log('🔤 Text field button clicked');
       showFieldModal('text');
@@ -878,7 +1065,7 @@ const { pdfId, pdfName } = Astro.props;
       showFieldModal('date');
     });
 
-    // Modal buttons
+    // Form field modal buttons
     cancelFieldBtn?.addEventListener('click', () => {
       console.log('❌ Cancel field button clicked');
       hideFieldModal();
@@ -892,7 +1079,7 @@ const { pdfId, pdfName } = Astro.props;
     // Placement instruction buttons
     cancelPlacementBtn?.addEventListener('click', () => {
       console.log('🛑 Cancel placement button clicked');
-      cancelFieldPlacement();
+      cancelPlacement();
     });
 
     // Event listeners for all other controls
@@ -929,8 +1116,8 @@ const { pdfId, pdfName } = Astro.props;
         sidebar.classList.add('hidden');
         savePdfBtn.disabled = true;
         
-        // Cancel any pending field placement
-        cancelFieldPlacement();
+        // Cancel any pending placement
+        cancelPlacement();
       }
     });
 
