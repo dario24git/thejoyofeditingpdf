@@ -419,7 +419,7 @@ const { pdfId, pdfName } = Astro.props;
   </div>
 </div>
 
-<script define:vars={{ pdfId }}>
+<script type="module" define:vars={{ pdfId }}>
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 PDF Editor initializing...');
     
