@@ -148,19 +148,23 @@ Deno.serve(async (req) => {
 
     console.log('PDF downloaded successfully, size:', fileData.size);
 
-    // Convert file to base64 for Google Cloud API - FIXED to prevent stack overflow
+    // Convert file to base64 for Google Cloud API - COMPLETELY REWRITTEN
     console.log('Converting file to base64...');
     const arrayBuffer = await fileData.arrayBuffer();
     
-    // Use a more memory-efficient approach for large files
-    const uint8Array = new Uint8Array(arrayBuffer);
+    // Use the built-in btoa with proper chunking for large files
+    const bytes = new Uint8Array(arrayBuffer);
     let base64Content = '';
     
-    // Process in chunks to avoid stack overflow
-    const chunkSize = 8192; // 8KB chunks
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      const chunkString = String.fromCharCode.apply(null, Array.from(chunk));
+    // Process in smaller chunks to avoid memory issues
+    const chunkSize = 1024; // 1KB chunks
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.slice(i, i + chunkSize);
+      // Convert chunk to string and then to base64
+      let chunkString = '';
+      for (let j = 0; j < chunk.length; j++) {
+        chunkString += String.fromCharCode(chunk[j]);
+      }
       base64Content += btoa(chunkString);
     }
 
@@ -275,7 +279,7 @@ async function processWithGoogleCloud(base64Content: string) {
   
   // Check for Google Cloud configuration
   const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
-  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || 'eu';
+  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || 'us';
   const processorId = Deno.env.get('GOOGLE_DOCUMENT_AI_PROCESSOR_ID');
   const serviceAccountJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
   const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
@@ -285,7 +289,7 @@ async function processWithGoogleCloud(base64Content: string) {
   console.log('- Location:', location);
   console.log('- Processor ID:', processorId ? 'SET' : 'MISSING');
   console.log('- Service Account JSON:', serviceAccountJson ? 'SET (length: ' + (serviceAccountJson?.length || 0) + ')' : 'MISSING');
-  console.log('- API Key:', apiKey ? 'SET' : 'MISSING');
+  console.log('- API Key:', apiKey ? 'SET (length: ' + (apiKey?.length || 0) + ')' : 'MISSING');
 
   // Try Document AI first if we have service account and processor ID
   if (projectId && processorId && serviceAccountJson) {
@@ -298,7 +302,7 @@ async function processWithGoogleCloud(base64Content: string) {
       // If Document AI fails but we have API key, try Vision API
       if (apiKey) {
         console.log('Falling back to Vision API...');
-        return await processWithVisionAPI(base64Content, projectId, apiKey);
+        return await processWithVisionAPI(base64Content, apiKey);
       }
       
       throw docAIError;
@@ -306,14 +310,14 @@ async function processWithGoogleCloud(base64Content: string) {
   }
   
   // Fallback to Vision API if we have API key
-  if (projectId && apiKey) {
+  if (apiKey) {
     console.log('Using Google Cloud Vision API with API key');
-    return await processWithVisionAPI(base64Content, projectId, apiKey);
+    return await processWithVisionAPI(base64Content, apiKey);
   }
 
   throw new Error('Missing Google Cloud configuration. Please set either:\n' +
     '1. GOOGLE_CLOUD_PROJECT_ID, GOOGLE_DOCUMENT_AI_PROCESSOR_ID, and GOOGLE_SERVICE_ACCOUNT_JSON for Document AI, or\n' +
-    '2. GOOGLE_CLOUD_PROJECT_ID and GOOGLE_CLOUD_API_KEY for Vision API');
+    '2. GOOGLE_CLOUD_API_KEY for Vision API');
 }
 
 async function processWithDocumentAI(base64Content: string, projectId: string, location: string, processorId: string, serviceAccountJson: string) {
@@ -379,7 +383,7 @@ async function processWithDocumentAI(base64Content: string, projectId: string, l
   }
 }
 
-async function processWithVisionAPI(base64Content: string, projectId: string, apiKey: string) {
+async function processWithVisionAPI(base64Content: string, apiKey: string) {
   console.log('=== PROCESSING WITH VISION API ===');
   
   // Use Google Cloud Vision API for document text detection
@@ -402,7 +406,7 @@ async function processWithVisionAPI(base64Content: string, projectId: string, ap
   };
 
   console.log('Making request to Vision API...');
-  console.log('Endpoint:', endpoint);
+  console.log('Endpoint (without key):', endpoint.replace(/key=.*/, 'key=***'));
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -541,14 +545,12 @@ function base64UrlEncode(data: string | Uint8Array): string {
   if (typeof data === 'string') {
     base64 = btoa(data);
   } else {
-    // Process in chunks to avoid stack overflow for large data
-    const chunkSize = 8192;
-    let result = '';
-    for (let i = 0; i < data.length; i += chunkSize) {
-      const chunk = data.slice(i, i + chunkSize);
-      result += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    // Convert Uint8Array to string safely
+    let binaryString = '';
+    for (let i = 0; i < data.length; i++) {
+      binaryString += String.fromCharCode(data[i]);
     }
-    base64 = result;
+    base64 = btoa(binaryString);
   }
   
   return base64
