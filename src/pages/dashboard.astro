@@ -72,7 +72,7 @@ import Layout from '../layouts/Layout.astro';
       <!-- Header -->
       <header class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/20 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center h-16">
+          <div class="flex flex-wrap justify-between items-center py-4 md:py-0 md:h-16 gap-3">
             <!-- Logo -->
             <div class="flex items-center">
               <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mr-3">
@@ -82,21 +82,19 @@ import Layout from '../layouts/Layout.astro';
               </div>
               <div>
                 <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">The Joy of Editing PDF</span>
-                <div class="text-xs text-gray-500">Your Creative Workspace</div>
+                <div class="text-xs text-gray-500 hidden sm:block">Your Creative Workspace</div>
               </div>
             </div>
             
             <!-- Navigation -->
-            <div class="flex items-center space-x-4">
-              <a href="/verify-ocr" class="text-sm text-gray-600 hover:text-purple-600 px-3 py-2 rounded-lg font-medium transition-colors hover:bg-purple-50">
-                🔍 Verify OCR
-              </a>
-              <div class="flex items-center space-x-3">
-                <div class="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-full">
+            <div class="flex items-center space-x-2 md:space-x-4">
+              <div class="flex items-center space-x-2">
+                <div class="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-full truncate max-w-[150px] md:max-w-none">
                   <span id="user-email" class="font-medium"></span>
                 </div>
                 <button id="sign-out-btn" class="text-gray-600 hover:text-red-600 px-3 py-2 text-sm font-medium transition-colors rounded-lg hover:bg-red-50">
-                  👋 Sign Out
+                  <span class="hidden sm:inline">Sign Out</span>
+                  <span class="sm:hidden">👋</span>
                 </button>
               </div>
             </div>
@@ -126,13 +124,6 @@ import Layout from '../layouts/Layout.astro';
                   </svg>
                   ✨ Upload Your First PDF
                 </button>
-                
-                <a href="/verify-ocr" class="inline-flex items-center px-6 py-3 bg-white/20 text-white rounded-2xl font-medium hover:bg-white/30 transition-all duration-300 border border-white/30">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Check OCR Status
-                </a>
               </div>
             </div>
           </div>
@@ -374,72 +365,55 @@ import Layout from '../layouts/Layout.astro';
 
       function createPDFCard(pdf) {
         const card = document.createElement('div');
-        card.className = 'bg-white/80 backdrop-blur-sm border-2 border-purple-100 rounded-3xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-2 group';
+        card.className = 'bg-white/80 backdrop-blur-sm border-2 border-purple-100 rounded-3xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-2 group relative';
         
         const statusColor = getOCRStatusColor(pdf.ocr_status);
         
         card.innerHTML = `
-          <div class="flex items-start justify-between">
-            <div class="flex items-start space-x-4 flex-1 min-w-0">
-              <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-r from-red-400 to-pink-400 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-base font-bold text-gray-900 truncate mb-2" title="${pdf.original_name}">
-                  📄 ${pdf.original_name}
-                </h3>
-                <p class="text-sm text-gray-500 mb-3">
-                  ${formatFileSize(pdf.file_size)} • ${formatDate(pdf.created_at)}
-                </p>
-                <div class="inline-flex items-center">
-                  <span class="text-xs px-3 py-1 rounded-full font-medium ${statusColor.bg} ${statusColor.text}">
-                    ${getOCRStatusText(pdf.ocr_status)}
-                  </span>
-                </div>
+          <div class="flex items-start space-x-4">
+            <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-r from-red-400 to-pink-400 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-bold text-gray-900 truncate mb-2" title="${pdf.original_name}">
+                📄 ${pdf.original_name}
+              </h3>
+              <p class="text-sm text-gray-500 mb-3">
+                ${formatFileSize(pdf.file_size)} • ${formatDate(pdf.created_at)}
+              </p>
+              <div class="inline-flex items-center">
+                <span class="text-xs px-3 py-1 rounded-full font-medium ${statusColor.bg} ${statusColor.text}">
+                  ${getOCRStatusText(pdf.ocr_status)}
+                </span>
               </div>
             </div>
-            <div class="flex-shrink-0 ml-2">
-              <div class="relative">
-                <button class="actions-btn p-2 rounded-full text-gray-400 hover:text-purple-600 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
-                  </svg>
-                </button>
-                
-                <div class="actions-menu hidden absolute right-0 mt-2 w-64 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl ring-1 ring-black ring-opacity-5 z-10 border border-purple-100 overflow-hidden transform -translate-x-3/4 md:translate-x-0">
-                  <div class="py-2">
-                    <button class="download-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                      📥 Download
-                    </button>
-                    <button class="view-ocr-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors" ${pdf.ocr_status !== 'completed' ? 'disabled' : ''}>
-                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                      </svg>
-                      👁️ View OCR Data
-                    </button>
-                    <a href="/edit-pdf/${pdf.id}" class="edit-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors ${pdf.ocr_status !== 'completed' ? 'opacity-50 pointer-events-none' : ''}">
-                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                      🎨 ${pdf.ocr_status === 'completed' ? 'Edit PDF' : 'Edit (OCR Required)'}
-                    </a>
-                    <div class="border-t border-gray-100 my-1"></div>
-                    <button class="delete-btn flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex mt-4 space-x-2 justify-end">
+            <button class="download-btn p-2 rounded-xl text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Download">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </button>
+            <button class="view-ocr-btn p-2 rounded-xl text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors ${pdf.ocr_status !== 'completed' ? 'opacity-50 cursor-not-allowed' : ''}" title="View OCR Data" ${pdf.ocr_status !== 'completed' ? 'disabled' : ''}>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+            <a href="/edit-pdf/${pdf.id}" class="edit-btn p-2 rounded-xl text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors ${pdf.ocr_status !== 'completed' ? 'opacity-50 pointer-events-none' : ''}" title="${pdf.ocr_status === 'completed' ? 'Edit PDF' : 'Edit (OCR Required)'}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </a>
+            <button class="delete-btn p-2 rounded-xl text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
           </div>
         `;
 
@@ -449,20 +423,9 @@ import Layout from '../layouts/Layout.astro';
       }
 
       function setupCardEventListeners(card, pdf) {
-        const actionsBtn = card.querySelector('.actions-btn');
-        const actionsMenu = card.querySelector('.actions-menu');
         const downloadBtn = card.querySelector('.download-btn');
         const viewOcrBtn = card.querySelector('.view-ocr-btn');
         const deleteBtn = card.querySelector('.delete-btn');
-
-        actionsBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          // Close other menus
-          document.querySelectorAll('.actions-menu').forEach(menu => {
-            if (menu !== actionsMenu) menu.classList.add('hidden');
-          });
-          actionsMenu?.classList.toggle('hidden');
-        });
 
         downloadBtn?.addEventListener('click', async () => {
           try {
@@ -732,15 +695,6 @@ import Layout from '../layouts/Layout.astro';
       confirmDelete?.addEventListener('click', () => {
         if (deleteCallback) {
           deleteCallback();
-        }
-      });
-
-      // Close menus when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.actions-btn')) {
-          document.querySelectorAll('.actions-menu').forEach(menu => {
-            menu.classList.add('hidden');
-          });
         }
       });
 
