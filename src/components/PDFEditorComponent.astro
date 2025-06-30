@@ -532,10 +532,10 @@ const { pdfId, pdfName } = Astro.props;
           // Import modules using absolute paths from the project root
           const modules = await Promise.all([
             import('/src/lib/pdf.ts'),
-            import('/src/lib/ocr.js'),
-            import('/src/lib/auth.js'),
-            import('/src/lib/supabase.js'),
-            import('/src/lib/pdf-editor.js')
+            import('/src/lib/ocr.ts'),
+            import('/src/lib/auth.ts'),
+            import('/src/lib/supabase.ts'),
+            import('/src/lib/pdf-editor.ts')
           ]);
           
           downloadPDF = modules[0].downloadPDF;
