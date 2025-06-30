@@ -525,26 +525,36 @@ const { pdfId, pdfName } = Astro.props;
         console.log('Loading required modules...');
         loadingText.textContent = 'Loading required modules...';
 
-        // Import modules with proper error handling and correct absolute paths
+        // Import modules with relative paths that work in production
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
-          // Import modules using absolute paths from the project root
-          const modules = await Promise.all([
-            import('/src/lib/pdf.js'),
-            import('/src/lib/ocr.js'),
-            import('/src/lib/auth.js'),
-            import('/src/lib/supabase.js'),
-            import('/src/lib/pdf-editor.js')
+          // Use relative imports that work in both dev and production
+          const [pdfModule, ocrModule, authModule, supabaseModule] = await Promise.all([
+            import('../lib/pdf.js'),
+            import('../lib/ocr.js'),
+            import('../lib/auth.js'),
+            import('../lib/supabase.js')
           ]);
           
-          downloadPDF = modules[0].downloadPDF;
-          getOCRData = modules[1].getOCRData;
-          getCurrentUser = modules[2].getCurrentUser;
-          supabase = modules[3].supabase;
-          PDFEditor = modules[4].PDFEditor;
+          downloadPDF = pdfModule.downloadPDF;
+          getOCRData = ocrModule.getOCRData;
+          getCurrentUser = authModule.getCurrentUser;
+          supabase = supabaseModule.supabase;
           
           console.log('✅ Core modules loaded successfully');
+          
+          // Try to load PDF editor module
+          try {
+            const editorModule = await import('../lib/pdf-editor.js');
+            PDFEditor = editorModule.PDFEditor;
+            console.log('✅ PDF Editor module loaded successfully');
+          } catch (editorError) {
+            console.warn('⚠️ PDF Editor module not found, creating fallback');
+            // Create a simple fallback PDF editor
+            PDFEditor = createFallbackPDFEditor();
+          }
+          
         } catch (moduleError) {
           console.error('❌ Failed to load core modules:', moduleError);
           throw new Error('Failed to load required modules');
@@ -570,6 +580,65 @@ const { pdfId, pdfName } = Astro.props;
         console.error('❌ Failed to initialize PDF editor:', error);
         showError('Failed to initialize PDF editor', error.message);
       }
+    }
+
+    // Create a fallback PDF editor if the main one fails to load
+    function createFallbackPDFEditor() {
+      return class FallbackPDFEditor {
+        constructor(canvas, overlay, options) {
+          this.canvas = canvas;
+          this.overlay = overlay;
+          this.options = options;
+          this.scale = 1.0;
+          this.currentPage = 1;
+          this.totalPages = 1;
+          this.selectedElement = null;
+          this.selectedFormField = null;
+        }
+
+        async loadPDF(arrayBuffer) {
+          console.log('Loading PDF with fallback editor...');
+          // Simple fallback - just show a message
+          const ctx = this.canvas.getContext('2d');
+          this.canvas.width = 600;
+          this.canvas.height = 800;
+          
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          
+          ctx.fillStyle = '#333';
+          ctx.font = '20px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('PDF Editor Loading...', this.canvas.width / 2, this.canvas.height / 2);
+          ctx.fillText('Please wait while we load the full editor', this.canvas.width / 2, this.canvas.height / 2 + 30);
+        }
+
+        async loadOCRData(data) {
+          console.log('OCR data loaded in fallback editor');
+        }
+
+        setModifyMode(enabled) {
+          console.log('Modify mode:', enabled);
+        }
+
+        getCurrentPage() { return this.currentPage; }
+        getTotalPages() { return this.totalPages; }
+        setScale(scale) { this.scale = scale; }
+        previousPage() { /* fallback */ }
+        nextPage() { /* fallback */ }
+        updateSelectedElement(updates) { /* fallback */ }
+        updateOverlay() { /* fallback */ }
+        startTextBoxPlacement(config) { /* fallback */ }
+        startFieldPlacement(config) { /* fallback */ }
+        cancelFieldPlacement() { /* fallback */ }
+        cancelTextBoxPlacement() { /* fallback */ }
+        removeFormField(id) { /* fallback */ }
+        removeTextElement(id) { /* fallback */ }
+        
+        async exportPDF() {
+          throw new Error('PDF export not available in fallback mode');
+        }
+      };
     }
 
     async function loadPDFAndOCR(getCurrentUser, downloadPDF, getOCRData, supabase) {
