@@ -10,14 +10,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/netlify": "^5.6.0",
+    "@astrojs/netlify": "^5.5.3",
     "@astrojs/tailwind": "^5.1.0",
     "@google-cloud/documentai": "^8.0.0",
     "@supabase/supabase-js": "^2.39.0",
     "@tailwindcss/typography": "^0.5.10",
-    "astro": "^5.2.5",
+    "astro": "^4.16.18",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^5.3.31",
+    "pdfjs-dist": "^4.8.69",
     "tailwindcss": "^3.4.0"
   },
   "devDependencies": {
