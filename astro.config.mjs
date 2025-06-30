@@ -17,6 +17,8 @@ export default defineConfig({
         // Ora 'path' e '__dirname' sono definiti e funzionano
         '@components': path.resolve(__dirname, 'src/components'),
         '@lib': path.resolve(__dirname, 'src/lib'),
+        // Fix for pdfjs-dist module resolution in browser
+        'pdfjs-dist': 'pdfjs-dist/build/pdf.mjs'
       }
     },
     server: {
