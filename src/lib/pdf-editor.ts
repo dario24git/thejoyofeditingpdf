@@ -2,7 +2,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import type { TextBlock, OCRData } from './ocr';
 
-// Configure PDF.js worker - use the correct worker file for version 4.0.269
+// Configure PDF.js worker - use the correct worker file for version 5.3.31
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('/pdf.worker.min.mjs', window.location.origin).href;
 }
@@ -117,14 +117,14 @@ export class PDFEditor {
 
   async loadPDF(pdfData: ArrayBuffer): Promise<void> {
     try {
-      // Ensure worker is properly configured for version 4.0.269
+      // Ensure worker is properly configured
       if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('/pdf.worker.min.mjs', window.location.origin).href;
       }
 
       this.pdfDocument = await pdfjsLib.getDocument({ 
         data: pdfData,
-        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.269/cmaps/',
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
         cMapPacked: true
       }).promise;
       
