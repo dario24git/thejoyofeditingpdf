@@ -102,7 +102,32 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </header>
 
-      
+      <!-- Main Content -->
+      <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+          <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-white relative overflow-hidden">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-20">
+              <div class="absolute top-4 right-4 w-32 h-32 bg-white rounded-full blur-xl"></div>
+              <div class="absolute bottom-4 left-4 w-24 h-24 bg-white rounded-full blur-xl"></div>
+            </div>
+            
+            <div class="relative z-10">
+              <h1 class="text-3xl sm:text-4xl font-bold mb-4">🎨 Welcome to Your Creative Canvas</h1>
+              <p class="text-purple-100 text-lg mb-6">Transform your PDFs with the gentle art of digital editing. Upload, edit, and create beautiful documents with joy.</p>
+              
+              <div class="flex flex-col sm:flex-row gap-4">
+                <button id="upload-btn" class="inline-flex items-center px-6 py-3 bg-white text-purple-600 rounded-2xl font-bold hover:bg-purple-50 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  ✨ Upload Your PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Upload Section -->
         <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-8 mb-8 border border-white/20">
