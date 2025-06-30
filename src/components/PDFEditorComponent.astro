@@ -529,13 +529,13 @@ const { pdfId, pdfName } = Astro.props;
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
-  // Importa i moduli usando percorsi relativi
-  const modules = await Promise.all([
-  import('@lib/pdf.js'),
-  import('@lib/ocr.js'),
-  import('@lib/auth.js'),
-  import('@lib/supabase.js'),
-  import('@lib/pdf-editor.js')
+  // Nel tuo blocco try...catch, trova questo Promise.all
+const modules = await Promise.all([
+  import('@lib/pdf.ts'),       
+  import('@lib/ocr.ts'),       
+  import('@lib/auth.ts'),      
+  import('@lib/supabase.ts'),  
+  import('@lib/pdf-editor.ts') 
 ]);
           
           downloadPDF = modules[0].downloadPDF;
