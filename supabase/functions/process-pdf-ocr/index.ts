@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Declare variables outside try block to access in catch block
+  // Initialize variables
   let pdfId: string | undefined;
   let user: any;
   let supabaseClient: any;
@@ -80,7 +80,6 @@ Deno.serve(async (req) => {
       throw new Error('User not found');
     }
 
-    // Assign user to outer scope variable
     user = authUser;
     console.log('User authenticated:', user.id, user.email);
 
@@ -222,7 +221,7 @@ Deno.serve(async (req) => {
     console.error('Error:', error);
     console.error('Stack:', error.stack);
     
-    // Update OCR status to failed using already parsed variables
+    // Update OCR status to failed
     try {
       if (pdfId && user && supabaseClient) {
         console.log('Updating OCR status to failed for PDF:', pdfId);
@@ -305,64 +304,58 @@ async function processWithGoogleCloud(base64Content: string) {
 async function processWithDocumentAI(base64Content: string, projectId: string, location: string, processorId: string, serviceAccountJson: string) {
   console.log('=== PROCESSING WITH DOCUMENT AI ===');
   
+  // Parse service account JSON
+  let serviceAccount;
   try {
-    // Parse service account JSON
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(serviceAccountJson);
-      console.log('Service account parsed successfully');
-      console.log('- Client email:', serviceAccount.client_email);
-      console.log('- Project ID from SA:', serviceAccount.project_id);
-    } catch (parseError) {
-      console.error('Failed to parse service account JSON:', parseError);
-      throw new Error('Invalid service account JSON format');
-    }
-
-    // Get access token using service account
-    console.log('Getting access token...');
-    const accessToken = await getAccessToken(serviceAccount);
-    console.log('Access token obtained successfully');
-
-    // Document AI endpoint
-    const endpoint = `https://${location}-documentai.googleapis.com/v1/projects/${projectId}/locations/${location}/processors/${processorId}:process`;
-
-    const requestBody = {
-      rawDocument: {
-        content: base64Content,
-        mimeType: 'application/pdf'
-      }
-    };
-
-    console.log('Making request to Document AI...');
-    console.log('Endpoint:', endpoint);
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    console.log('Document AI response:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Document AI error response:', errorText);
-      throw new Error(`Document AI error: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Document AI response received successfully');
-    
-    // Process the Document AI response
-    return parseDocumentAIResponse(result);
-
-  } catch (error) {
-    console.error('Document AI processing failed:', error);
-    throw error;
+    serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('Service account parsed successfully');
+    console.log('- Client email:', serviceAccount.client_email);
+    console.log('- Project ID from SA:', serviceAccount.project_id);
+  } catch (parseError) {
+    console.error('Failed to parse service account JSON:', parseError);
+    throw new Error('Invalid service account JSON format');
   }
+
+  // Get access token
+  console.log('Getting access token...');
+  const accessToken = await getGoogleAccessToken(serviceAccount);
+  console.log('Access token obtained successfully');
+
+  // Document AI endpoint
+  const endpoint = `https://${location}-documentai.googleapis.com/v1/projects/${projectId}/locations/${location}/processors/${processorId}:process`;
+
+  const requestBody = {
+    rawDocument: {
+      content: base64Content,
+      mimeType: 'application/pdf'
+    }
+  };
+
+  console.log('Making request to Document AI...');
+  console.log('Endpoint:', endpoint);
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  console.log('Document AI response:', response.status, response.statusText);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Document AI error response:', errorText);
+    throw new Error(`Document AI error: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log('Document AI response received successfully');
+  
+  // Process the Document AI response
+  return parseDocumentAIResponse(result);
 }
 
 async function processWithVisionAPI(base64Content: string, projectId: string, apiKey: string) {
@@ -420,101 +413,93 @@ async function processWithVisionAPI(base64Content: string, projectId: string, ap
   return parseVisionAPIResponse(result);
 }
 
-// Fixed access token method - removed recursion issue
-async function getAccessToken(serviceAccount: any): Promise<string> {
-  console.log('Getting access token using Google OAuth2...');
+// Completely rewritten access token function - no recursion
+async function getGoogleAccessToken(serviceAccount: any): Promise<string> {
+  console.log('Getting Google access token...');
   
-  try {
-    const now = Math.floor(Date.now() / 1000);
-    const expiry = now + 3600; // 1 hour
-    
-    // Create JWT payload
-    const payload = {
-      iss: serviceAccount.client_email,
-      scope: 'https://www.googleapis.com/auth/cloud-platform',
-      aud: 'https://oauth2.googleapis.com/token',
-      exp: expiry,
-      iat: now
-    };
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600; // 1 hour
+  
+  // Create JWT payload
+  const payload = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: expiry,
+    iat: now
+  };
 
-    // Create JWT header
-    const header = {
-      alg: 'RS256',
-      typ: 'JWT'
-    };
+  // Create JWT header
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  };
 
-    // Base64URL encode header and payload
-    const encodedHeader = base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-    
-    const signingInput = `${encodedHeader}.${encodedPayload}`;
-    
-    // Import the private key for signing
-    const privateKeyPem = serviceAccount.private_key;
-    if (!privateKeyPem) {
-      throw new Error('No private key found in service account');
-    }
+  // Encode header and payload
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  
+  // Import private key
+  const privateKeyPem = serviceAccount.private_key;
+  if (!privateKeyPem) {
+    throw new Error('No private key found in service account');
+  }
 
-    // Clean up the private key format
-    const cleanPrivateKey = privateKeyPem
-      .replace(/-----BEGIN PRIVATE KEY-----/, '')
-      .replace(/-----END PRIVATE KEY-----/, '')
-      .replace(/\s/g, '');
+  // Clean private key
+  const cleanPrivateKey = privateKeyPem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
 
-    const keyData = Uint8Array.from(atob(cleanPrivateKey), c => c.charCodeAt(0));
-    
-    const cryptoKey = await crypto.subtle.importKey(
-      'pkcs8',
-      keyData,
-      {
-        name: 'RSASSA-PKCS1-v1_5',
-        hash: 'SHA-256'
-      },
-      false,
-      ['sign']
-    );
+  // Convert to binary
+  const keyData = Uint8Array.from(atob(cleanPrivateKey), c => c.charCodeAt(0));
+  
+  // Import key for signing
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyData,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256'
+    },
+    false,
+    ['sign']
+  );
 
-    // Sign the JWT
-    const signature = await crypto.subtle.sign(
-      'RSASSA-PKCS1-v1_5',
-      cryptoKey,
-      new TextEncoder().encode(signingInput)
-    );
+  // Sign the JWT
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
 
-    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
-    const jwt = `${signingInput}.${encodedSignature}`;
+  // Create final JWT
+  const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+  const jwt = `${signingInput}.${encodedSignature}`;
 
-    // Exchange JWT for access token
-    const tokenRequest = new URLSearchParams({
+  // Exchange JWT for access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: jwt
-    });
+    })
+  });
 
-    console.log('Making token request to Google OAuth2...');
-    
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: tokenRequest
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Token request failed:', response.status, errorText);
-      throw new Error(`Failed to get access token: ${response.status} - ${errorText}`);
-    }
-
-    const tokenData = await response.json();
-    console.log('Access token received successfully');
-    
-    return tokenData.access_token;
-    
-  } catch (error) {
-    console.error('Access token request failed:', error);
-    throw new Error(`Failed to get access token: ${error.message}`);
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    console.error('Token request failed:', tokenResponse.status, errorText);
+    throw new Error(`Failed to get access token: ${tokenResponse.status} - ${errorText}`);
   }
+
+  const tokenData = await tokenResponse.json();
+  console.log('Access token received successfully');
+  
+  return tokenData.access_token;
 }
 
 function base64UrlEncode(data: string | Uint8Array): string {
