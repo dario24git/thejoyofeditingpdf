@@ -419,7 +419,7 @@ const { pdfId, pdfName } = Astro.props;
   </div>
 </div>
 
-<script type="module" define:vars={{ pdfId }}>
+<script define:vars={{ pdfId }} type="module" >
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 PDF Editor initializing...');
     
@@ -525,7 +525,6 @@ const { pdfId, pdfName } = Astro.props;
         console.log('Loading required modules...');
         loadingText.textContent = 'Loading required modules...';
 
-        // Import modules with proper error handling and correct absolute paths
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
