@@ -1,0 +1,16 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import PDFEditorComponent from '../../components/PDFEditorComponent.astro';
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/dashboard');
+}
+---
+
+<Layout title="Edit PDF - PDFManager">
+  <PDFEditorComponent pdfId={id} pdfName="PDF Document" />
+</Layout>

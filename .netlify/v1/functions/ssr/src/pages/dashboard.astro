@@ -1,0 +1,712 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Dashboard - The Joy of Editing PDF">
+  <div id="auth-check" class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
+    <!-- Loading State -->
+    <div id="loading-state" class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto mb-4"></div>
+        <p class="text-purple-600 font-medium">Loading your creative workspace...</p>
+      </div>
+    </div>
+
+    <!-- Unauthenticated State -->
+    <div id="unauthenticated-state" class="hidden">
+      <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+          <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <h2 class="mt-6 text-3xl font-bold text-gray-900">🎨 Access Your Canvas</h2>
+            <p class="mt-2 text-sm text-gray-600">Please sign in to access your creative PDF workspace.</p>
+            <div class="mt-6">
+              <a href="/signin" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-300">
+                🌈 Sign In to Create
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection Error State -->
+    <div id="connection-error-state" class="hidden">
+      <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+          <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h2 class="mt-6 text-3xl font-bold text-gray-900">🔧 Connection Needed</h2>
+            <p class="mt-2 text-sm text-gray-600">Please connect to Supabase to use this application.</p>
+            <p class="mt-2 text-sm text-gray-500">Click "Connect to Supabase" in the top right corner.</p>
+            <div class="mt-6">
+              <a href="/" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 transform hover:scale-105 transition-all duration-300">
+                🏠 Go Home
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authenticated Dashboard -->
+    <div id="authenticated-state" class="hidden">
+      <!-- Header -->
+      <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">The Joy of Editing PDF</span>
+                <div class="text-xs text-gray-500">Your Creative Workspace</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+              <a href="/verify-ocr" class="text-sm text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md font-medium transition-colors">
+                🔍 Verify OCR
+              </a>
+              <span id="user-email" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full"></span>
+              <button id="sign-out-btn" class="text-gray-600 hover:text-red-600 px-3 py-2 text-sm font-medium transition-colors">
+                👋 Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Upload Section -->
+        <div class="bg-white shadow-lg rounded-2xl p-6 mb-8 border border-purple-100">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">🎨 My PDF Canvas</h1>
+              <p class="text-gray-600 mt-1">Create beautiful documents with joy and creativity</p>
+            </div>
+            <button id="upload-btn" class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-sm font-bold rounded-full text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-300">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              ✨ Upload PDF
+            </button>
+          </div>
+
+          <!-- Drag and Drop Area -->
+          <div id="drop-zone" class="border-3 border-dashed border-purple-300 rounded-2xl p-12 text-center hover:border-purple-400 transition-all duration-300 cursor-pointer bg-gradient-to-br from-purple-25 via-pink-25 to-yellow-25 hover:from-purple-50 hover:via-pink-50 hover:to-yellow-50">
+            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+            </div>
+            <p class="text-lg font-bold text-gray-700 mb-2">
+              🎨 <span class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Drop your PDF here</span> or click to browse
+            </p>
+            <p class="text-sm text-gray-500">PDF files only, up to 10MB • Let's create something beautiful together!</p>
+          </div>
+
+          <input type="file" id="file-input" class="hidden" accept=".pdf" />
+        </div>
+
+        <!-- PDF List -->
+        <div id="pdf-list" class="bg-white shadow-lg rounded-2xl border border-purple-100">
+          <!-- Loading PDFs -->
+          <div id="pdfs-loading" class="p-12 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600 mx-auto mb-4"></div>
+            <p class="text-purple-600 font-medium">Loading your creative works...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="hidden p-16 text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">🎨 Your Canvas Awaits</h3>
+            <p class="text-gray-500 mb-6">No PDFs uploaded yet. Let's create your first masterpiece!</p>
+            <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full text-purple-700 text-sm font-medium">
+              💡 Tip: Drag and drop a PDF above to get started
+            </div>
+          </div>
+
+          <!-- PDF Grid -->
+          <div id="pdf-grid" class="hidden p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- PDF cards will be inserted here -->
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Upload Progress Modal -->
+  <div id="upload-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-2xl bg-white">
+      <div class="mt-3">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900">🎨 Creating Your Masterpiece</h3>
+        </div>
+        <div class="mb-4">
+          <div class="w-full bg-purple-100 rounded-full h-3">
+            <div id="upload-progress" class="bg-gradient-to-r from-purple-600 to-pink-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <p id="upload-status" class="text-sm text-gray-600 mt-2">Preparing your canvas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal --> 
+  <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-2xl bg-white">
+      <div class="mt-3 text-center">
+        <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mt-2">🗑️ Remove from Canvas</h3>
+        <p class="text-sm text-gray-500 mt-2">Are you sure you want to delete this PDF? This action cannot be undone.</p>
+        <div class="flex justify-center space-x-3 mt-6">
+          <button id="cancel-delete" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 font-medium transition-colors">
+            Cancel
+          </button>
+          <button id="confirm-delete" class="px-6 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-full hover:from-red-700 hover:to-orange-700 font-medium transition-all">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const { getCurrentUser, signOut, onAuthStateChange } = await import('../lib/auth');
+      const { uploadPDF, getUserPDFs, deletePDF, downloadPDF, formatFileSize, formatDate } = await import('../lib/pdf');
+      const { getOCRData } = await import('../lib/ocr');
+
+      let currentUser = null;
+      let currentPDFs = [];
+
+      // DOM Elements
+      const loadingState = document.getElementById('loading-state');
+      const unauthenticatedState = document.getElementById('unauthenticated-state');
+      const connectionErrorState = document.getElementById('connection-error-state');
+      const authenticatedState = document.getElementById('authenticated-state');
+      const userEmail = document.getElementById('user-email');
+      const signOutBtn = document.getElementById('sign-out-btn');
+      const uploadBtn = document.getElementById('upload-btn');
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('file-input');
+      const pdfList = document.getElementById('pdf-list');
+      const pdfsLoading = document.getElementById('pdfs-loading');
+      const emptyState = document.getElementById('empty-state');
+      const pdfGrid = document.getElementById('pdf-grid');
+      const uploadModal = document.getElementById('upload-modal');
+      const uploadProgress = document.getElementById('upload-progress');
+      const uploadStatus = document.getElementById('upload-status');
+      const deleteModal = document.getElementById('delete-modal');
+      const cancelDelete = document.getElementById('cancel-delete');
+      const confirmDelete = document.getElementById('confirm-delete');
+
+      let deleteCallback = null;
+
+      // Initialize
+      async function init() {
+        try {
+          const { user } = await getCurrentUser();
+          
+          if (user) {
+            currentUser = user;
+            showAuthenticatedState();
+            await loadPDFs();
+          } else {
+            showUnauthenticatedState();
+          }
+        } catch (error) {
+          if (error.message?.includes('Missing Supabase') || error.message?.includes('placeholder')) {
+            showConnectionErrorState();
+          } else {
+            showUnauthenticatedState();
+          }
+        }
+      }
+
+      function showAuthenticatedState() {
+        loadingState?.classList.add('hidden');
+        unauthenticatedState?.classList.add('hidden');
+        connectionErrorState?.classList.add('hidden');
+        authenticatedState?.classList.remove('hidden');
+        
+        if (userEmail && currentUser) {
+          userEmail.textContent = currentUser.email || '';
+        }
+      }
+
+      function showUnauthenticatedState() {
+        loadingState?.classList.add('hidden');
+        authenticatedState?.classList.add('hidden');
+        connectionErrorState?.classList.add('hidden');
+        unauthenticatedState?.classList.remove('hidden');
+      }
+
+      function showConnectionErrorState() {
+        loadingState?.classList.add('hidden');
+        authenticatedState?.classList.add('hidden');
+        unauthenticatedState?.classList.add('hidden');
+        connectionErrorState?.classList.remove('hidden');
+      }
+
+      async function loadPDFs() {
+        if (!currentUser) return;
+
+        pdfsLoading?.classList.remove('hidden');
+        emptyState?.classList.add('hidden');
+        pdfGrid?.classList.add('hidden');
+
+        try {
+          const { data, error } = await getUserPDFs(currentUser.id);
+          
+          if (error) {
+            return;
+          }
+
+          currentPDFs = data || [];
+          renderPDFs();
+        } catch (error) {
+          // Handle error silently
+        } finally {
+          pdfsLoading?.classList.add('hidden');
+        }
+      }
+
+      function renderPDFs() {
+        if (currentPDFs.length === 0) {
+          emptyState?.classList.remove('hidden');
+          pdfGrid?.classList.add('hidden');
+          return;
+        }
+
+        emptyState?.classList.add('hidden');
+        pdfGrid?.classList.remove('hidden');
+        if (pdfGrid) pdfGrid.innerHTML = '';
+
+        currentPDFs.forEach(pdf => {
+          const card = createPDFCard(pdf);
+          pdfGrid?.appendChild(card);
+        });
+      }
+
+      function createPDFCard(pdf) {
+        const card = document.createElement('div');
+        card.className = 'bg-white border-2 border-purple-100 rounded-2xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-1';
+        
+        const statusColor = getOCRStatusColor(pdf.ocr_status);
+        
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex items-start space-x-4 flex-1 min-w-0">
+              <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-red-400 to-pink-400 rounded-xl flex items-center justify-center shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-gray-900 truncate mb-1" title="${pdf.original_name}">
+                  📄 ${pdf.original_name}
+                </h3>
+                <p class="text-sm text-gray-500 mb-2">
+                  ${formatFileSize(pdf.file_size)} • ${formatDate(pdf.created_at)}
+                </p>
+                <div class="inline-flex items-center">
+                  <span class="text-xs px-3 py-1 rounded-full font-medium ${statusColor.bg} ${statusColor.text}">
+                    ${getOCRStatusText(pdf.ocr_status)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-shrink-0 ml-2">
+              <div class="relative">
+                <button class="actions-btn p-2 rounded-full text-gray-400 hover:text-purple-600 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                  </svg>
+                </button>
+                
+                <div class="actions-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 z-10 border border-purple-100">
+                  <div class="py-2">
+                    <button class="download-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      📥 Download
+                    </button>
+                    <button class="view-ocr-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors" ${pdf.ocr_status !== 'completed' ? 'disabled' : ''}>
+                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      👁️ View OCR Data
+                    </button>
+                    <a href="/edit-pdf/${pdf.id}" class="edit-btn flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors ${pdf.ocr_status !== 'completed' ? 'opacity-50 pointer-events-none' : ''}">
+                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      🎨 ${pdf.ocr_status === 'completed' ? 'Edit PDF' : 'Edit (OCR Required)'}
+                    </a>
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <button class="delete-btn flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                      <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Add event listeners
+        setupCardEventListeners(card, pdf);
+        return card;
+      }
+
+      function setupCardEventListeners(card, pdf) {
+        const actionsBtn = card.querySelector('.actions-btn');
+        const actionsMenu = card.querySelector('.actions-menu');
+        const downloadBtn = card.querySelector('.download-btn');
+        const viewOcrBtn = card.querySelector('.view-ocr-btn');
+        const deleteBtn = card.querySelector('.delete-btn');
+
+        actionsBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Close other menus
+          document.querySelectorAll('.actions-menu').forEach(menu => {
+            if (menu !== actionsMenu) menu.classList.add('hidden');
+          });
+          actionsMenu?.classList.toggle('hidden');
+        });
+
+        downloadBtn?.addEventListener('click', async () => {
+          try {
+            const { data, error } = await downloadPDF(pdf.file_path);
+            
+            if (error) {
+              alert('Error downloading file: ' + error);
+              return;
+            }
+
+            if (data) {
+              const url = URL.createObjectURL(data);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = pdf.original_name;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }
+          } catch (error) {
+            alert('Error downloading file');
+          }
+        });
+
+        viewOcrBtn?.addEventListener('click', async () => {
+          if (pdf.ocr_status !== 'completed') {
+            alert('OCR processing is not yet complete for this PDF.');
+            return;
+          }
+
+          try {
+            const { data, error } = await getOCRData(pdf.id);
+            
+            if (error) {
+              alert('Error loading OCR data: ' + error);
+              return;
+            }
+
+            if (data && data.length > 0) {
+              // Create a simple modal to display OCR data
+              const modal = document.createElement('div');
+              modal.className = 'fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50';
+              modal.innerHTML = `
+                <div class="relative top-20 mx-auto p-6 border w-11/12 max-w-4xl shadow-2xl rounded-2xl bg-white">
+                  <div class="mt-3">
+                    <div class="flex justify-between items-center mb-6">
+                      <h3 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">📄 OCR Data for ${pdf.original_name}</h3>
+                      <button class="close-modal text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto space-y-4">
+                      ${data.map(page => `
+                        <div class="p-4 border-2 border-purple-100 rounded-xl bg-gradient-to-r from-purple-25 to-pink-25">
+                          <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+                            📄 Page ${page.page_number}
+                            <span class="ml-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                              ${(page.confidence_score * 100).toFixed(1)}% confidence
+                            </span>
+                          </h4>
+                          <div class="bg-white p-3 rounded-lg text-sm border border-purple-100">
+                            ${page.extracted_text || 'No text extracted'}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(modal);
+              
+              // Close modal functionality
+              const closeBtn = modal.querySelector('.close-modal');
+              const closeModal = () => {
+                document.body.removeChild(modal);
+              };
+              
+              closeBtn?.addEventListener('click', closeModal);
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+              });
+            } else {
+              alert('No OCR data found for this PDF.');
+            }
+          } catch (error) {
+            alert('Error loading OCR data');
+          }
+        });
+
+        deleteBtn?.addEventListener('click', () => {
+          showDeleteModal(() => deletePDFHandler(pdf.id));
+        });
+      }
+
+      function getOCRStatusColor(status) {
+        switch (status) {
+          case 'pending':
+            return { bg: 'bg-yellow-100', text: 'text-yellow-800' };
+          case 'processing':
+            return { bg: 'bg-blue-100', text: 'text-blue-800' };
+          case 'completed':
+            return { bg: 'bg-green-100', text: 'text-green-800' };
+          case 'failed':
+            return { bg: 'bg-red-100', text: 'text-red-800' };
+          default:
+            return { bg: 'bg-gray-100', text: 'text-gray-800' };
+        }
+      }
+
+      function getOCRStatusText(status) {
+        switch (status) {
+          case 'pending':
+            return '⏳ OCR Pending';
+          case 'processing':
+            return '🔄 Processing...';
+          case 'completed':
+            return '✅ OCR Complete';
+          case 'failed':
+            return '❌ OCR Failed';
+          default:
+            return '❓ Unknown';
+        }
+      }
+
+      function showDeleteModal(callback) {
+        deleteCallback = callback;
+        deleteModal?.classList.remove('hidden');
+      }
+
+      function hideDeleteModal() {
+        deleteModal?.classList.add('hidden');
+        deleteCallback = null;
+      }
+
+      async function deletePDFHandler(pdfId) {
+        try {
+          const { error } = await deletePDF(pdfId, currentUser.id);
+          
+          if (error) {
+            alert('Error deleting file: ' + error);
+            return;
+          }
+
+          // Remove from current PDFs array and re-render
+          currentPDFs = currentPDFs.filter(pdf => pdf.id !== pdfId);
+          renderPDFs();
+          hideDeleteModal();
+        } catch (error) {
+          alert('Error deleting file');
+        }
+      }
+
+      function updateUploadProgress(percentage, status) {
+        if (uploadProgress) uploadProgress.style.width = `${percentage}%`;
+        if (uploadStatus) uploadStatus.textContent = status;
+      }
+
+      async function handleFileUpload(file) {
+        if (!currentUser) {
+          return;
+        }
+
+        // Validate file
+        if (file.type !== 'application/pdf') {
+          alert('Only PDF files are allowed');
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File size must be less than 10MB');
+          return;
+        }
+
+        // Show upload modal
+        uploadModal?.classList.remove('hidden');
+        updateUploadProgress(0, 'Preparing your canvas...');
+
+        try {
+          updateUploadProgress(20, 'Adding colors to palette...');
+          updateUploadProgress(30, 'Uploading to cloud gallery...');
+
+          const { data, error } = await uploadPDF(file, currentUser.id);
+          
+          if (error) {
+            alert('Error uploading file: ' + error);
+            uploadModal?.classList.add('hidden');
+            return;
+          }
+
+          updateUploadProgress(80, 'Adding finishing touches...');
+
+          // Add to current PDFs and re-render
+          if (data) {
+            currentPDFs.unshift(data);
+            renderPDFs();
+          }
+
+          updateUploadProgress(100, '🎨 Masterpiece created!');
+
+          setTimeout(() => {
+            uploadModal?.classList.add('hidden');
+          }, 2000);
+
+        } catch (error) {
+          alert('Error uploading file: ' + error.message);
+          uploadModal?.classList.add('hidden');
+        }
+      }
+
+      // Event Listeners
+      signOutBtn?.addEventListener('click', async () => {
+        try {
+          const { error } = await signOut();
+          if (!error) {
+            window.location.href = '/';
+          }
+        } catch (error) {
+          // Handle error silently
+        }
+      });
+
+      uploadBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput?.click();
+      });
+
+      dropZone?.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput?.click();
+      });
+
+      dropZone?.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-purple-400', 'from-purple-50', 'via-pink-50', 'to-yellow-50');
+      });
+
+      dropZone?.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-purple-400', 'from-purple-50', 'via-pink-50', 'to-yellow-50');
+      });
+
+      dropZone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-purple-400', 'from-purple-50', 'via-pink-50', 'to-yellow-50');
+        
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+          handleFileUpload(files[0]);
+        }
+      });
+
+      fileInput?.addEventListener('change', (e) => {
+        const files = e.target?.files;
+        if (files && files.length > 0) {
+          handleFileUpload(files[0]);
+          // Reset the input so the same file can be selected again
+          e.target.value = '';
+        }
+      });
+
+      cancelDelete?.addEventListener('click', hideDeleteModal);
+
+      confirmDelete?.addEventListener('click', () => {
+        if (deleteCallback) {
+          deleteCallback();
+        }
+      });
+
+      // Close menus when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.actions-btn')) {
+          document.querySelectorAll('.actions-menu').forEach(menu => {
+            menu.classList.add('hidden');
+          });
+        }
+      });
+
+      // Initialize the app
+      await init();
+
+      // Listen for auth state changes
+      onAuthStateChange((user) => {
+        if (user && !currentUser) {
+          currentUser = user;
+          showAuthenticatedState();
+          loadPDFs();
+        } else if (!user && currentUser) {
+          currentUser = null;
+          showUnauthenticatedState();
+        }
+      });
+
+    } catch (error) {
+      document.getElementById('connection-error-state')?.classList.remove('hidden');
+      document.getElementById('loading-state')?.classList.add('hidden');
+    }
+  });
+</script>
