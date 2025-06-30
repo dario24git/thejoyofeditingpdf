@@ -260,14 +260,15 @@ async function processWithGoogleCloud(base64Content: string) {
   
   // Check for Google Cloud configuration
   const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
-  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || 'us';
+  // CRITICAL FIX: Use proper location environment variable with EU default
+  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || Deno.env.get('GOOGLE_DOCUMENT_AI_LOCATION') || 'eu';
   const processorId = Deno.env.get('GOOGLE_DOCUMENT_AI_PROCESSOR_ID');
   const serviceAccountJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
   const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
 
   console.log('Google Cloud configuration:');
   console.log('- Project ID:', projectId ? 'SET' : 'MISSING');
-  console.log('- Location:', location);
+  console.log('- Location:', location, '(using EU default if not set)');
   console.log('- Processor ID:', processorId ? 'SET' : 'MISSING');
   console.log('- Service Account JSON:', serviceAccountJson ? 'SET (length: ' + (serviceAccountJson?.length || 0) + ')' : 'MISSING');
   console.log('- API Key:', apiKey ? 'SET' : 'MISSING');
@@ -297,12 +298,13 @@ async function processWithGoogleCloud(base64Content: string) {
   }
 
   throw new Error('Missing Google Cloud configuration. Please set either:\n' +
-    '1. GOOGLE_CLOUD_PROJECT_ID, GOOGLE_DOCUMENT_AI_PROCESSOR_ID, and GOOGLE_SERVICE_ACCOUNT_JSON for Document AI, or\n' +
+    '1. GOOGLE_CLOUD_PROJECT_ID, GOOGLE_DOCUMENT_AI_PROCESSOR_ID, GOOGLE_CLOUD_LOCATION (or use "eu" default), and GOOGLE_SERVICE_ACCOUNT_JSON for Document AI, or\n' +
     '2. GOOGLE_CLOUD_PROJECT_ID and GOOGLE_CLOUD_API_KEY for Vision API');
 }
 
 async function processWithDocumentAI(base64Content: string, projectId: string, location: string, processorId: string, serviceAccountJson: string) {
   console.log('=== PROCESSING WITH DOCUMENT AI ===');
+  console.log('Using location:', location);
   
   // Parse service account JSON
   let serviceAccount;
@@ -321,7 +323,7 @@ async function processWithDocumentAI(base64Content: string, projectId: string, l
   const accessToken = await getGoogleAccessToken(serviceAccount);
   console.log('Access token obtained successfully');
 
-  // Document AI endpoint
+  // Document AI endpoint with correct location
   const endpoint = `https://${location}-documentai.googleapis.com/v1/projects/${projectId}/locations/${location}/processors/${processorId}:process`;
 
   const requestBody = {
