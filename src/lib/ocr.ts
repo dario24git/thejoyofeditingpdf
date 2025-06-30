@@ -26,9 +26,12 @@ export interface OCRData {
 }
 
 function getSupabaseUrl(): string {
-  return import.meta.env.VITE_SUPABASE_URL || 
-         (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_URL : null) ||
-         'https://sumzwmhxnweydjdgdbxc.supabase.co';
+  const url = import.meta.env.VITE_SUPABASE_URL || 
+             (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_URL : null) ||
+             'https://sumzwmhxnweydjdgdbxc.supabase.co';
+  
+  console.log('OCR: Using Supabase URL:', url);
+  return url;
 }
 
 export async function processOCR(pdfId: string, filePath: string): Promise<{ error: string | null }> {
@@ -52,10 +55,28 @@ export async function processOCR(pdfId: string, filePath: string): Promise<{ err
     }
 
     const supabaseUrl = getSupabaseUrl();
+    
+    // Validate URL before making request
+    if (!supabaseUrl || supabaseUrl === 'undefined' || supabaseUrl.includes('undefined')) {
+      console.error('❌ Invalid Supabase URL for OCR:', supabaseUrl);
+      return { error: 'Invalid Supabase URL configuration. Please check your environment variables.' };
+    }
+
     const apiUrl = `${supabaseUrl}/functions/v1/process-pdf-ocr`;
+    
+    console.log('🔍 OCR API URL:', apiUrl);
+
+    // Validate the constructed URL
+    try {
+      new URL(apiUrl);
+    } catch (urlError) {
+      console.error('❌ Invalid API URL constructed:', apiUrl);
+      return { error: `Invalid API URL: ${apiUrl}. Check your VITE_SUPABASE_URL environment variable.` };
+    }
 
     // Test if the function exists first
     try {
+      console.log('🧪 Testing Edge Function availability...');
       const testResponse = await fetch(apiUrl, {
         method: 'OPTIONS',
         headers: {
@@ -63,14 +84,18 @@ export async function processOCR(pdfId: string, filePath: string): Promise<{ err
         }
       });
       
+      console.log('🧪 Test response:', testResponse.status, testResponse.statusText);
+      
       if (testResponse.status === 404) {
         return { error: 'OCR service is not available. The Edge function needs to be deployed.' };
       }
     } catch (testError) {
+      console.error('🧪 Test request failed:', testError);
       return { error: `OCR service test failed: ${testError.message}` };
     }
 
     // Make the actual OCR request
+    console.log('🚀 Starting OCR processing...');
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -79,6 +104,8 @@ export async function processOCR(pdfId: string, filePath: string): Promise<{ err
       },
       body: JSON.stringify({ pdfId, filePath })
     });
+
+    console.log('📡 OCR response:', response.status, response.statusText);
 
     // Check if the response is HTML (likely an error page)
     const contentType = response.headers.get('content-type');
@@ -101,12 +128,14 @@ export async function processOCR(pdfId: string, filePath: string): Promise<{ err
     // Parse successful response
     try {
       const result = await response.json();
+      console.log('✅ OCR processing completed successfully');
       return { error: null };
     } catch (parseError) {
       return { error: 'Invalid response from OCR service' };
     }
 
   } catch (error) {
+    console.error('❌ OCR processing error:', error);
     return { error: `An unexpected error occurred during OCR processing: ${error.message}` };
   }
 }
