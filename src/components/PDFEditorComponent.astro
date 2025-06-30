@@ -535,7 +535,7 @@ const { pdfId, pdfName } = Astro.props;
             import('../lib/ocr.js'),
             import('../lib/auth.js'),
             import('../lib/supabase.js'),
-            import('../lib/pdf-editor.js')
+            import('src/lib/pdf-editor.js')
           ]);
           
           downloadPDF = modules[0].downloadPDF;
