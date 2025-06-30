@@ -23,6 +23,13 @@ export default defineConfig({
       hmr: {
         timeout: 120000 // 2 minutes timeout instead of default 60 seconds
       }
+    },
+    optimizeDeps: {
+      include: [
+        'pdfjs-dist',
+        'pdf-lib',
+        '@supabase/supabase-js'
+      ]
     }
   }
 });
