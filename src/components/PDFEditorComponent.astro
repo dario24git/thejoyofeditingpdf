@@ -530,7 +530,7 @@ const { pdfId, pdfName } = Astro.props;
         try {
   // Nel tuo blocco try...catch, trova questo Promise.all
 const modules = await Promise.all([
-  import('/src/lib/pdf.js'),       
+  import('@lib/pdf.js'),       
   import('/src/lib/ocr.js'),       
   import('/src/lib/auth.js'),      
   import('/src/lib/supabase.js'),  
