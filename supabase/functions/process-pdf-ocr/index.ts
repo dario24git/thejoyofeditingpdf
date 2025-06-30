@@ -261,7 +261,7 @@ async function processWithGoogleCloud(base64Content: string) {
   // Check for Google Cloud configuration
   const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
   // CRITICAL FIX: Use proper location environment variable with EU default
-  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || Deno.env.get('GOOGLE_DOCUMENT_AI_LOCATION') || 'eu';
+  const location = 'eu';
   const processorId = Deno.env.get('GOOGLE_DOCUMENT_AI_PROCESSOR_ID');
   const serviceAccountJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
   const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
