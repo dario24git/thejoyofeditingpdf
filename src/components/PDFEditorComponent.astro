@@ -525,17 +525,17 @@ const { pdfId, pdfName } = Astro.props;
         console.log('Loading required modules...');
         loadingText.textContent = 'Loading required modules...';
 
-        // Import modules with proper error handling and correct relative paths
+        // Import modules with proper error handling and correct TypeScript paths
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
-          // Use proper relative paths that work with Astro's module resolution
+          // Use proper TypeScript file extensions and paths that work with Astro
           const modules = await Promise.all([
-            import('../lib/pdf.js'),       
-            import('../lib/ocr.js'),       
-            import('../lib/auth.js'),      
-            import('../lib/supabase.js'),  
-            import('../lib/pdf-editor.js') 
+            import('/src/lib/pdf.ts'),       
+            import('/src/lib/ocr.ts'),       
+            import('/src/lib/auth.ts'),      
+            import('/src/lib/supabase.ts'),  
+            import('/src/lib/pdf-editor.ts') 
           ]);
           
           downloadPDF = modules[0].downloadPDF;
