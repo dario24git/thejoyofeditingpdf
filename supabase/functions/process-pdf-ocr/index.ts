@@ -148,10 +148,21 @@ Deno.serve(async (req) => {
 
     console.log('PDF downloaded successfully, size:', fileData.size);
 
-    // Convert file to base64 for Google Cloud API
+    // Convert file to base64 for Google Cloud API - FIXED to prevent stack overflow
     console.log('Converting file to base64...');
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    // Use a more memory-efficient approach for large files
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let base64Content = '';
+    
+    // Process in chunks to avoid stack overflow
+    const chunkSize = 8192; // 8KB chunks
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      const chunkString = String.fromCharCode.apply(null, Array.from(chunk));
+      base64Content += btoa(chunkString);
+    }
 
     console.log('File converted to base64, length:', base64Content.length);
 
@@ -530,7 +541,14 @@ function base64UrlEncode(data: string | Uint8Array): string {
   if (typeof data === 'string') {
     base64 = btoa(data);
   } else {
-    base64 = btoa(String.fromCharCode(...data));
+    // Process in chunks to avoid stack overflow for large data
+    const chunkSize = 8192;
+    let result = '';
+    for (let i = 0; i < data.length; i += chunkSize) {
+      const chunk = data.slice(i, i + chunkSize);
+      result += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
+    base64 = result;
   }
   
   return base64
