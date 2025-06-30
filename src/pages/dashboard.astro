@@ -86,8 +86,23 @@ import Layout from '../layouts/Layout.astro';
               </div>
             </div>
             
-            <!-- Navigation -->
-            <div class="flex items-center space-x-2 md:space-x-4">
+            <!-- Mobile menu button -->
+            <div class="md:hidden">
+              <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-purple-600 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500" aria-expanded="false">
+                <span class="sr-only">Open main menu</span>
+                <!-- Icon when menu is closed -->
+                <svg id="menu-closed-icon" class="block h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <!-- Icon when menu is open -->
+                <svg id="menu-open-icon" class="hidden h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-2 md:space-x-4">
               <div class="flex items-center space-x-2">
                 <div class="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-full truncate max-w-[150px] md:max-w-none">
                   <span id="user-email" class="font-medium"></span>
@@ -98,6 +113,24 @@ import Layout from '../layouts/Layout.astro';
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Mobile menu for dashboard -->
+        <div id="mobile-menu" class="hidden md:hidden">
+          <div class="px-2 pt-2 pb-3 space-y-1 bg-white/90 backdrop-blur-sm border-t border-white/20">
+            <div class="flex items-center px-3 py-3 rounded-xl bg-purple-50">
+              <svg class="w-5 h-5 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span id="mobile-user-email" class="text-purple-700 font-medium text-sm truncate"></span>
+            </div>
+            <button id="mobile-sign-out-btn" class="flex items-center w-full text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-3 rounded-xl text-base font-medium transition-colors">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              Sign Out
+            </button>
           </div>
         </div>
       </header>
@@ -260,7 +293,9 @@ import Layout from '../layouts/Layout.astro';
       const connectionErrorState = document.getElementById('connection-error-state');
       const authenticatedState = document.getElementById('authenticated-state');
       const userEmail = document.getElementById('user-email');
+      const mobileUserEmail = document.getElementById('mobile-user-email');
       const signOutBtn = document.getElementById('sign-out-btn');
+      const mobileSignOutBtn = document.getElementById('mobile-sign-out-btn');
       const uploadBtn = document.getElementById('upload-btn');
       const dropZone = document.getElementById('drop-zone');
       const fileInput = document.getElementById('file-input');
@@ -275,7 +310,42 @@ import Layout from '../layouts/Layout.astro';
       const cancelDelete = document.getElementById('cancel-delete');
       const confirmDelete = document.getElementById('confirm-delete');
 
+      // Mobile menu elements
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuClosedIcon = document.getElementById('menu-closed-icon');
+      const menuOpenIcon = document.getElementById('menu-open-icon');
+
       let deleteCallback = null;
+
+      // Mobile menu toggle functionality
+      if (mobileMenuButton && mobileMenu && menuClosedIcon && menuOpenIcon) {
+        mobileMenuButton.addEventListener('click', () => {
+          // Toggle menu visibility
+          mobileMenu.classList.toggle('hidden');
+          
+          // Toggle icons
+          menuClosedIcon.classList.toggle('hidden');
+          menuOpenIcon.classList.toggle('hidden');
+          
+          // Update aria-expanded attribute
+          const isExpanded = mobileMenu.classList.contains('hidden') ? 'false' : 'true';
+          mobileMenuButton.setAttribute('aria-expanded', isExpanded);
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (event) => {
+          const isClickInsideMenu = mobileMenu.contains(event.target);
+          const isClickOnButton = mobileMenuButton.contains(event.target);
+          
+          if (!isClickInsideMenu && !isClickOnButton && !mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+            menuClosedIcon.classList.remove('hidden');
+            menuOpenIcon.classList.add('hidden');
+            mobileMenuButton.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
 
       // Initialize
       async function init() {
@@ -306,6 +376,9 @@ import Layout from '../layouts/Layout.astro';
         
         if (userEmail && currentUser) {
           userEmail.textContent = currentUser.email || '';
+        }
+        if (mobileUserEmail && currentUser) {
+          mobileUserEmail.textContent = currentUser.email || '';
         }
       }
 
@@ -641,6 +714,17 @@ import Layout from '../layouts/Layout.astro';
 
       // Event Listeners
       signOutBtn?.addEventListener('click', async () => {
+        try {
+          const { error } = await signOut();
+          if (!error) {
+            window.location.href = '/';
+          }
+        } catch (error) {
+          // Handle error silently
+        }
+      });
+
+      mobileSignOutBtn?.addEventListener('click', async () => {
         try {
           const { error } = await signOut();
           if (!error) {
