@@ -1,16 +1,276 @@
 ---
-export const prerender = false;
-
 import Layout from '../../layouts/Layout.astro';
-import PDFEditorComponent from '../../components/PDFEditorComponent.astro';
-
-const { id } = Astro.params;
-
-if (!id) {
-  return Astro.redirect('/dashboard');
-}
 ---
 
-<Layout title="Edit PDF - PDFManager">
-  <PDFEditorComponent pdfId={id} pdfName="PDF Document" />
+<Layout title="Edit PDF">
+  <div id="pdf-editor-container" class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold text-gray-900">PDF Editor</h1>
+          <button id="back-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            ← Back to Dashboard
+          </button>
+        </div>
+        
+        <div id="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <p class="mt-2 text-gray-600">Loading PDF editor...</p>
+        </div>
+        
+        <div id="error" class="hidden bg-red-50 border border-red-200 rounded-md p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Error</h3>
+              <div class="mt-2 text-sm text-red-700" id="error-message"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="editor-content" class="hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- PDF Viewer -->
+            <div class="lg:col-span-2">
+              <div class="bg-gray-100 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-lg font-medium text-gray-900">PDF Preview</h2>
+                  <div class="flex items-center space-x-2">
+                    <button id="prev-page" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">Previous</button>
+                    <span id="page-info" class="text-sm text-gray-600">Page 1 of 1</span>
+                    <button id="next-page" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50">Next</button>
+                  </div>
+                </div>
+                <div id="pdf-canvas-container" class="bg-white rounded border">
+                  <canvas id="pdf-canvas" class="max-w-full h-auto"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <!-- OCR Text Panel -->
+            <div class="lg:col-span-1">
+              <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Extracted Text</h2>
+                <div id="ocr-text-container" class="space-y-4">
+                  <div class="text-sm text-gray-500">Loading OCR data...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="mt-6 flex justify-end space-x-3">
+            <button id="save-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Save Changes
+            </button>
+            <button id="export-btn" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+              Export PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </Layout>
+
+<script>
+  // Get PDF ID from URL
+  const pathParts = window.location.pathname.split('/');
+  const pdfId = pathParts[pathParts.length - 1];
+  
+  let currentPage = 1;
+  let totalPages = 1;
+  let pdfDoc = null;
+  let canvas = null;
+  let ctx = null;
+  let ocrData = [];
+
+  // Show error function
+  function showError(message) {
+    console.error('❌ Failed to initialize PDF editor:', message);
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
+    document.getElementById('error-message').textContent = message;
+  }
+
+  // Initialize editor
+  async function initializeEditor() {
+    try {
+      console.log('🚀 Initializing PDF editor for ID:', pdfId);
+      
+      // Use relative imports instead of alias imports for dynamic loading
+      const [
+        { default: pdfLib },
+        { processOCR, getOCRData },
+        { getCurrentUser },
+        { supabase }
+      ] = await Promise.all([
+        import('../../lib/pdf.ts'),
+        import('../../lib/ocr.ts'),
+        import('../../lib/auth.ts'),
+        import('../../lib/supabase.ts')
+      ]);
+
+      console.log('✅ Modules loaded successfully');
+
+      // Check authentication
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get PDF data from Supabase
+      const { data: pdfData, error: pdfError } = await supabase
+        .from('user_pdfs')
+        .select('*')
+        .eq('id', pdfId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (pdfError || !pdfData) {
+        throw new Error('PDF not found or access denied');
+      }
+
+      console.log('📄 PDF data loaded:', pdfData);
+
+      // Initialize PDF.js
+      if (typeof window !== 'undefined' && window.pdfjsLib) {
+        window.pdfjsLib.workerSrc = '/pdf.worker.min.mjs';
+        
+        // Load PDF document
+        const loadingTask = window.pdfjsLib.getDocument(pdfData.file_path);
+        pdfDoc = await loadingTask.promise;
+        totalPages = pdfDoc.numPages;
+
+        // Setup canvas
+        canvas = document.getElementById('pdf-canvas');
+        ctx = canvas.getContext('2d');
+
+        // Load OCR data
+        ocrData = await getOCRData(pdfId);
+        console.log('🔍 OCR data loaded:', ocrData);
+
+        // Render first page
+        await renderPage(1);
+
+        // Show editor content
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('editor-content').classList.remove('hidden');
+
+        // Setup event listeners
+        setupEventListeners();
+
+        console.log('✅ PDF editor initialized successfully');
+      } else {
+        throw new Error('PDF.js library not loaded');
+      }
+    } catch (error) {
+      console.error('Error initializing editor:', error);
+      showError(error.message || 'Failed to load required modules');
+    }
+  }
+
+  // Render PDF page
+  async function renderPage(pageNum) {
+    if (!pdfDoc) return;
+
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+
+      await page.render(renderContext).promise;
+
+      // Update page info
+      document.getElementById('page-info').textContent = `Page ${pageNum} of ${totalPages}`;
+      
+      // Update OCR text for current page
+      updateOCRText(pageNum);
+
+      currentPage = pageNum;
+    } catch (error) {
+      console.error('Error rendering page:', error);
+    }
+  }
+
+  // Update OCR text display
+  function updateOCRText(pageNum) {
+    const container = document.getElementById('ocr-text-container');
+    const pageOCR = ocrData.find(ocr => ocr.page_number === pageNum);
+
+    if (pageOCR && pageOCR.extracted_text) {
+      container.innerHTML = `
+        <div class="bg-gray-50 p-3 rounded text-sm">
+          <h3 class="font-medium text-gray-900 mb-2">Page ${pageNum} Text:</h3>
+          <div class="text-gray-700 whitespace-pre-wrap">${pageOCR.extracted_text}</div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="text-sm text-gray-500">
+          No OCR data available for page ${pageNum}
+        </div>
+      `;
+    }
+  }
+
+  // Setup event listeners
+  function setupEventListeners() {
+    // Navigation buttons
+    document.getElementById('prev-page').addEventListener('click', () => {
+      if (currentPage > 1) {
+        renderPage(currentPage - 1);
+      }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        renderPage(currentPage + 1);
+      }
+    });
+
+    // Back button
+    document.getElementById('back-btn').addEventListener('click', () => {
+      window.location.href = '/dashboard';
+    });
+
+    // Save button
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      // Implement save functionality
+      alert('Save functionality will be implemented');
+    });
+
+    // Export button
+    document.getElementById('export-btn').addEventListener('click', async () => {
+      // Implement export functionality
+      alert('Export functionality will be implemented');
+    });
+  }
+
+  // Initialize when DOM is loaded
+  document.addEventListener('DOMContentLoaded', initializeEditor);
+</script>
+
+<style>
+  #pdf-canvas {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  #ocr-text-container {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+</style>
