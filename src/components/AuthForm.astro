@@ -8,55 +8,120 @@ interface Props {
 const { type, title, subtitle } = Astro.props;
 ---
 
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="flex justify-center">
-      <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center">
-        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-      </div>
-    </div>
-    <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">{title}</h2>
-    <p class="mt-2 text-center text-sm text-gray-600">{subtitle}</p>
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <!-- Background Elements -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+    <div class="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-xl opacity-20 animate-bounce"></div>
   </div>
 
-  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+    <!-- Logo and Header -->
+    <div class="text-center">
+      <div class="flex justify-center mb-6">
+        <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
+          <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+          </svg>
+        </div>
+      </div>
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">{title}</h2>
+      <p class="text-gray-600">{subtitle}</p>
+    </div>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+    <div class="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-white/20">
       <form id="auth-form" class="space-y-6">
-        <div id="error-message" class="hidden p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600"></p>
+        <!-- Error Message -->
+        <div id="error-message" class="hidden p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-red-600 font-medium"></p>
+            </div>
+          </div>
         </div>
         
-        <div id="success-message" class="hidden p-3 bg-green-50 border border-green-200 rounded-md">
-          <p class="text-sm text-green-600"></p>
-        </div>
-
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-          <div class="mt-1">
-            <input id="email" name="email" type="email" autocomplete="email" required 
-                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+        <!-- Success Message -->
+        <div id="success-message" class="hidden p-4 bg-green-50 border border-green-200 rounded-xl">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-600 font-medium"></p>
+            </div>
           </div>
         </div>
 
+        <!-- Email Field -->
+        <div>
+          <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email address</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+              </svg>
+            </div>
+            <input id="email" name="email" type="email" autocomplete="email" required 
+                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white/50"
+                   placeholder="Enter your email">
+          </div>
+        </div>
+
+        <!-- Password Field -->
         {type !== 'reset' && (
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <div class="mt-1">
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
               <input id="password" name="password" type="password" autocomplete="current-password" required 
-                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white/50"
+                     placeholder="Enter your password">
             </div>
           </div>
         )}
 
+        <!-- Submit Button -->
         <div>
           <button type="submit" 
-                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            <span id="button-text">
-              {type === 'signin' && 'Sign In'}
-              {type === 'signup' && 'Create Account'}
-              {type === 'reset' && 'Send Reset Link'}
+                  class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            <span id="button-text" class="flex items-center">
+              {type === 'signin' && (
+                <>
+                  <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                  </svg>
+                  Sign In
+                </>
+              )}
+              {type === 'signup' && (
+                <>
+                  <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                  </svg>
+                  Create Account
+                </>
+              )}
+              {type === 'reset' && (
+                <>
+                  <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  Send Reset Link
+                </>
+              )}
             </span>
             <svg id="loading-spinner" class="hidden animate-spin -mr-1 ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -65,31 +130,54 @@ const { type, title, subtitle } = Astro.props;
           </button>
         </div>
 
-        {type === 'signin' && (
-          <div class="flex items-center justify-between">
-            <a href="/reset-password" class="text-sm text-primary-600 hover:text-primary-500">
-              Forgot your password?
-            </a>
-            <a href="/signup" class="text-sm text-primary-600 hover:text-primary-500">
-              Create account
-            </a>
-          </div>
-        )}
+        <!-- Links -->
+        <div class="space-y-4">
+          {type === 'signin' && (
+            <div class="flex items-center justify-between text-sm">
+              <a href="/reset-password" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                Forgot your password?
+              </a>
+              <a href="/signup" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                Create account
+              </a>
+            </div>
+          )}
 
-        {type === 'signup' && (
-          <div class="text-center">
-            <span class="text-sm text-gray-600">Already have an account? </span>
-            <a href="/signin" class="text-sm text-primary-600 hover:text-primary-500">Sign in</a>
-          </div>
-        )}
+          {type === 'signup' && (
+            <div class="text-center text-sm">
+              <span class="text-gray-600">Already have an account? </span>
+              <a href="/signin" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">Sign in</a>
+            </div>
+          )}
 
-        {type === 'reset' && (
-          <div class="text-center">
-            <a href="/signin" class="text-sm text-primary-600 hover:text-primary-500">
-              Back to sign in
-            </a>
+          {type === 'reset' && (
+            <div class="text-center">
+              <a href="/signin" class="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                Back to sign in
+              </a>
+            </div>
+          )}
+        </div>
+
+        <!-- Divider -->
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
           </div>
-        )}
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">or</span>
+          </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+          <a href="/" class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to home
+          </a>
+        </div>
       </form>
     </div>
   </div>
@@ -104,7 +192,6 @@ const { type, title, subtitle } = Astro.props;
     const successMessage = document.getElementById('success-message');
     const buttonText = document.getElementById('button-text');
     const loadingSpinner = document.getElementById('loading-spinner');
-    const type = document.body.dataset.authType || 'signin';
 
     function showError(message) {
       const errorP = errorMessage?.querySelector('p');
@@ -161,13 +248,16 @@ const { type, title, subtitle } = Astro.props;
         if (authType === 'signin') {
           result = await signIn(email, password);
           if (!result.error) {
-            window.location.href = '/dashboard';
+            showSuccess('Welcome back! Redirecting to your dashboard...');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
             return;
           }
         } else if (authType === 'signup') {
           result = await signUp(email, password);
           if (!result.error) {
-            showSuccess('Account created successfully! You can now sign in.');
+            showSuccess('Account created successfully! Welcome to the joy of PDF editing!');
             setTimeout(() => {
               window.location.href = '/signin';
             }, 2000);
@@ -176,7 +266,7 @@ const { type, title, subtitle } = Astro.props;
         } else if (authType === 'reset') {
           result = await resetPassword(email);
           if (!result.error) {
-            showSuccess('Password reset link sent to your email.');
+            showSuccess('Password reset link sent to your email. Check your inbox!');
             return;
           }
         }
