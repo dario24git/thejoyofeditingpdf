@@ -3,9 +3,8 @@
   publish = "dist"
 
 [functions]
-  # Exclude Supabase functions from Netlify's function bundling
-  # These should run on Supabase's platform, not Netlify
-  ignore = "supabase/functions/**"
+  # Directory for Netlify functions (empty since we're using Supabase)
+  directory = "netlify/functions"
 
 [[redirects]]
   from = "/*"
