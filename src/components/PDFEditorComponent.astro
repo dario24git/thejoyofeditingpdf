@@ -525,23 +525,17 @@ const { pdfId, pdfName } = Astro.props;
         console.log('Loading required modules...');
         loadingText.textContent = 'Loading required modules...';
 
-        // First, configure PDF.js worker before loading any modules
-        console.log('Configuring PDF.js worker...');
-        const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-        console.log('✅ PDF.js worker configured');
-
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
-          // Load all other modules after PDF.js is configured
-          const modules = await Promise.all([
-            import('@lib/pdf.ts'),       
-            import('@lib/ocr.ts'),       
-            import('@lib/auth.ts'),      
-            import('@lib/supabase.ts'),  
-            import('@lib/pdf-editor.ts') 
-          ]);
+  // Nel tuo blocco try...catch, trova questo Promise.all
+const modules = await Promise.all([
+  import('@lib/pdf.ts'),       
+  import('@lib/ocr.ts'),       
+  import('@lib/auth.ts'),      
+  import('@lib/supabase.ts'),  
+  import('@lib/pdf-editor.ts') 
+]);
           
           downloadPDF = modules[0].downloadPDF;
           getOCRData = modules[1].getOCRData;
