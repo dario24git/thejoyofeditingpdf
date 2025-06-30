@@ -5,8 +5,10 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="The Joy of Editing PDF - Create Beautiful Documents">
   <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative">
-    <!-- Bolt.new Badge -->
-    <div class="fixed top-4 right-4 z-50">
+    <Header showAuth={true} />
+    
+    <!-- Bolt.new Badge - Positioned below header -->
+    <div class="fixed top-20 right-4 z-40">
       <a 
         href="https://bolt.new" 
         target="_blank" 
@@ -18,7 +20,7 @@ import Layout from '../layouts/Layout.astro';
           <img 
             src="/boltdotnew.png" 
             alt="Bolt.new" 
-            class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-300 border-2 border-white/50 group-hover:border-purple-300"
+            class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-300 border-2 border-white/50 group-hover:border-purple-300"
           />
           <!-- Glow effect on hover -->
           <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-sm"></div>
@@ -32,8 +34,6 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </a>
     </div>
-
-    <Header showAuth={true} />
     
     <!-- Hero Section -->
     <section class="relative overflow-hidden">
@@ -257,18 +257,23 @@ import Layout from '../layouts/Layout.astro';
   }
 
   /* Responsive adjustments for the badge */
+  @media (max-width: 768px) {
+    .bolt-badge {
+      top: 4.5rem; /* Adjust for mobile header height */
+    }
+  }
+
   @media (max-width: 640px) {
     .bolt-badge {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
+      top: 4rem;
+      right: 0.75rem;
     }
   }
 
   @media (max-width: 480px) {
     .bolt-badge img {
-      width: 3rem;
-      height: 3rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
   }
 </style>
