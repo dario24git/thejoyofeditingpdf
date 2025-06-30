@@ -530,14 +530,16 @@ const { pdfId, pdfName } = Astro.props;
         
         try {
   // Importa i moduli usando percorsi relativi
-  const modules = await Promise.all([
-    import('../lib/pdf.ts'),
-    import('../lib/ocr.ts'),
-    import('../lib/auth.ts'),
-    import('../lib/supabase.ts'),
-    import('../lib/pdf-editor.ts')
-  ]);
-          
+  const moduleImporters = import.meta.glob('../lib/*.ts');
+
+      // Esegui gli import effettivi
+      const modules = await Promise.all([
+        moduleImporters['../lib/pdf.ts'](),
+        moduleImporters['../lib/ocr.ts'](),
+        moduleImporters['../lib/auth.ts'](),
+        moduleImporters['../lib/supabase.ts'](),
+        moduleImporters['../lib/pdf-editor.ts']()
+      ]);
           downloadPDF = modules[0].downloadPDF;
           getOCRData = modules[1].getOCRData;
           getCurrentUser = modules[2].getCurrentUser;
