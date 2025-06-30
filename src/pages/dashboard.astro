@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import Layout from '../layouts/Layout.astro';
 ---
 
@@ -190,6 +192,22 @@ import Layout from '../layouts/Layout.astro';
 
         <!-- PDF List -->
         <div id="pdf-list" class="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl border border-white/20 overflow-hidden">
+          <!-- PDF List Header with Refresh Button -->
+          <div class="flex items-center justify-between p-6 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+              <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              📄 Your Creative Works
+            </h2>
+            <button id="refresh-pdfs-btn" class="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              <svg id="refresh-icon" class="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span id="refresh-text">🔄 Refresh</span>
+            </button>
+          </div>
+
           <!-- Loading PDFs -->
           <div id="pdfs-loading" class="p-12 text-center">
             <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -309,6 +327,9 @@ import Layout from '../layouts/Layout.astro';
       const deleteModal = document.getElementById('delete-modal');
       const cancelDelete = document.getElementById('cancel-delete');
       const confirmDelete = document.getElementById('confirm-delete');
+      const refreshPdfsBtn = document.getElementById('refresh-pdfs-btn');
+      const refreshIcon = document.getElementById('refresh-icon');
+      const refreshText = document.getElementById('refresh-text');
 
       // Mobile menu elements
       const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -416,6 +437,35 @@ import Layout from '../layouts/Layout.astro';
           // Handle error silently
         } finally {
           pdfsLoading?.classList.add('hidden');
+        }
+      }
+
+      async function refreshPDFs() {
+        if (!currentUser) return;
+
+        // Update button state
+        refreshPdfsBtn.disabled = true;
+        refreshIcon.classList.add('animate-spin');
+        refreshText.textContent = '🔄 Refreshing...';
+
+        try {
+          await loadPDFs();
+          
+          // Show success feedback
+          refreshText.textContent = '✅ Updated!';
+          setTimeout(() => {
+            refreshText.textContent = '🔄 Refresh';
+          }, 2000);
+        } catch (error) {
+          // Show error feedback
+          refreshText.textContent = '❌ Error';
+          setTimeout(() => {
+            refreshText.textContent = '🔄 Refresh';
+          }, 2000);
+        } finally {
+          // Reset button state
+          refreshPdfsBtn.disabled = false;
+          refreshIcon.classList.remove('animate-spin');
         }
       }
 
@@ -744,6 +794,9 @@ import Layout from '../layouts/Layout.astro';
           deleteCallback();
         }
       });
+
+      // Refresh PDFs button event listener
+      refreshPdfsBtn?.addEventListener('click', refreshPDFs);
 
       // Initialize the app
       await init();
