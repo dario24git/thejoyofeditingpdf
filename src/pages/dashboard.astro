@@ -440,8 +440,6 @@ import Layout from '../layouts/Layout.astro';
         const card = document.createElement('div');
         card.className = 'bg-white/80 backdrop-blur-sm border-2 border-purple-100 rounded-3xl p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-2 group relative';
         
-        const statusColor = getOCRStatusColor(pdf.ocr_status);
-        
         card.innerHTML = `
           <div class="flex items-start space-x-4">
             <div class="flex-shrink-0 w-14 h-14 bg-gradient-to-r from-red-400 to-pink-400 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -456,11 +454,6 @@ import Layout from '../layouts/Layout.astro';
               <p class="text-sm text-gray-500 mb-3">
                 ${formatFileSize(pdf.file_size)} • ${formatDate(pdf.created_at)}
               </p>
-              <div class="inline-flex items-center">
-                <span class="text-xs px-3 py-1 rounded-full font-medium ${statusColor.bg} ${statusColor.text}">
-                  ${getOCRStatusText(pdf.ocr_status)}
-                </span>
-              </div>
             </div>
           </div>
           
@@ -595,36 +588,6 @@ import Layout from '../layouts/Layout.astro';
         deleteBtn?.addEventListener('click', () => {
           showDeleteModal(() => deletePDFHandler(pdf.id));
         });
-      }
-
-      function getOCRStatusColor(status) {
-        switch (status) {
-          case 'pending':
-            return { bg: 'bg-yellow-100', text: 'text-yellow-800' };
-          case 'processing':
-            return { bg: 'bg-blue-100', text: 'text-blue-800' };
-          case 'completed':
-            return { bg: 'bg-green-100', text: 'text-green-800' };
-          case 'failed':
-            return { bg: 'bg-red-100', text: 'text-red-800' };
-          default:
-            return { bg: 'bg-gray-100', text: 'text-gray-800' };
-        }
-      }
-
-      function getOCRStatusText(status) {
-        switch (status) {
-          case 'pending':
-            return '⏳ OCR Pending';
-          case 'processing':
-            return '🔄 Processing...';
-          case 'completed':
-            return '✅ OCR Complete';
-          case 'failed':
-            return '❌ OCR Failed';
-          default:
-            return '❓ Unknown';
-        }
       }
 
       function showDeleteModal(callback) {
