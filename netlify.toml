@@ -1,6 +1,9 @@
 [build]
   command = "npx astro build"
-  publish = "dist"
+  publish = "dist/client"
+
+[functions]
+  directory = "dist/server"
 
 [build.environment]
   NODE_VERSION = "18"
