@@ -2,6 +2,11 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import netlify from '@astrojs/netlify';
 
+// ✅ RIGHE MANCANTI DA AGGIUNGERE
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
   integrations: [tailwind()],
   output: 'server',
@@ -9,7 +14,7 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        // Definisci gli stessi alias che hai in tsconfig.json
+        // Ora 'path' e '__dirname' sono definiti e funzionano
         '@components': path.resolve(__dirname, 'src/components'),
         '@lib': path.resolve(__dirname, 'src/lib'),
       }
