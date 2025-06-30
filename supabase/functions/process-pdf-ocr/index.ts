@@ -148,27 +148,55 @@ Deno.serve(async (req) => {
 
     console.log('PDF downloaded successfully, size:', fileData.size);
 
-    // Convert file to base64 for Google Cloud API - COMPLETELY REWRITTEN
+    // Convert file to base64 for Google Cloud API - FIXED APPROACH
     console.log('Converting file to base64...');
     const arrayBuffer = await fileData.arrayBuffer();
     
-    // Use the built-in btoa with proper chunking for large files
-    const bytes = new Uint8Array(arrayBuffer);
+    // Use a more reliable base64 conversion method
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Convert to base64 using a more reliable method
     let base64Content = '';
     
-    // Process in smaller chunks to avoid memory issues
-    const chunkSize = 1024; // 1KB chunks
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.slice(i, i + chunkSize);
-      // Convert chunk to string and then to base64
-      let chunkString = '';
-      for (let j = 0; j < chunk.length; j++) {
-        chunkString += String.fromCharCode(chunk[j]);
+    // Method 1: Try using built-in btoa with proper string conversion
+    try {
+      // Convert bytes to binary string first
+      let binaryString = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        binaryString += String.fromCharCode(uint8Array[i]);
       }
-      base64Content += btoa(chunkString);
+      
+      // Then convert to base64
+      base64Content = btoa(binaryString);
+      console.log('Base64 conversion successful using binary string method');
+      
+    } catch (btoaError) {
+      console.error('btoa method failed:', btoaError);
+      
+      // Method 2: Fallback to manual base64 encoding
+      const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      let result = '';
+      
+      for (let i = 0; i < uint8Array.length; i += 3) {
+        const a = uint8Array[i];
+        const b = uint8Array[i + 1] || 0;
+        const c = uint8Array[i + 2] || 0;
+        
+        const bitmap = (a << 16) | (b << 8) | c;
+        
+        result += base64Chars.charAt((bitmap >> 18) & 63);
+        result += base64Chars.charAt((bitmap >> 12) & 63);
+        result += i + 1 < uint8Array.length ? base64Chars.charAt((bitmap >> 6) & 63) : '=';
+        result += i + 2 < uint8Array.length ? base64Chars.charAt(bitmap & 63) : '=';
+      }
+      
+      base64Content = result;
+      console.log('Base64 conversion successful using manual method');
     }
 
     console.log('File converted to base64, length:', base64Content.length);
+    console.log('Base64 starts with:', base64Content.substring(0, 50));
+    console.log('Base64 ends with:', base64Content.substring(base64Content.length - 50));
 
     // Process with Google Cloud Document AI or Vision API
     console.log('Starting OCR processing...');
