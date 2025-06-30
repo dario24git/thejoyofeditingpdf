@@ -531,10 +531,10 @@ const { pdfId, pdfName } = Astro.props;
         try {
           // Use relative imports that work in both dev and production
           const [pdfModule, ocrModule, authModule, supabaseModule] = await Promise.all([
-            import('../lib/pdf.js'),
-            import('../lib/ocr.js'),
-            import('../lib/auth.js'),
-            import('../lib/supabase.js')
+            import('../lib/pdf.ts'),
+            import('../lib/ocr.ts'),
+            import('../lib/auth.ts'),
+            import('../lib/supabase.ts')
           ]);
           
           downloadPDF = pdfModule.downloadPDF;
