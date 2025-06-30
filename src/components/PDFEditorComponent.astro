@@ -420,13 +420,6 @@ const { pdfId, pdfName } = Astro.props;
 </div>
 
 <script type="module" define:vars={{ pdfId }}>
-  // Import all modules using static imports at the top level
-  import { downloadPDF } from '/src/lib/pdf.ts';
-  import { getOCRData } from '/src/lib/ocr.ts';
-  import { getCurrentUser } from '/src/lib/auth.ts';
-  import { supabase } from '/src/lib/supabase.ts';
-  import { PDFEditor } from '/src/lib/pdf-editor.ts';
-
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 PDF Editor initializing...');
     
@@ -529,6 +522,35 @@ const { pdfId, pdfName } = Astro.props;
 
     async function initializeEditor() {
       try {
+        console.log('Loading required modules...');
+        loadingText.textContent = 'Loading required modules...';
+
+        // Import modules with proper error handling and correct TypeScript paths
+        let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
+        
+        try {
+          // Use proper TypeScript file extensions and paths that work with Astro
+          const modules = await Promise.all([
+            import('/src/lib/pdf.ts'),       
+            import('/src/lib/ocr.ts'),       
+            import('/src/lib/auth.ts'),      
+            import('/src/lib/supabase.ts'),  
+            import('/src/lib/pdf-editor.ts') 
+          ]);
+          
+          downloadPDF = modules[0].downloadPDF;
+          getOCRData = modules[1].getOCRData;
+          getCurrentUser = modules[2].getCurrentUser;
+          supabase = modules[3].supabase;
+          PDFEditor = modules[4].PDFEditor;
+          
+          console.log('✅ Core modules loaded successfully');
+        } catch (moduleError) {
+          console.error('❌ Failed to load core modules:', moduleError);
+          throw new Error('Failed to load required modules');
+        }
+
+        // Initialize PDF editor using the PDFEditor class
         console.log('Creating PDF editor...');
         loadingText.textContent = 'Initializing PDF editor...';
         
@@ -542,7 +564,7 @@ const { pdfId, pdfName } = Astro.props;
         });
 
         console.log('✅ PDF editor created, loading PDF and OCR data...');
-        await loadPDFAndOCR();
+        await loadPDFAndOCR(getCurrentUser, downloadPDF, getOCRData, supabase);
         
       } catch (error) {
         console.error('❌ Failed to initialize PDF editor:', error);
@@ -550,7 +572,7 @@ const { pdfId, pdfName } = Astro.props;
       }
     }
 
-    async function loadPDFAndOCR() {
+    async function loadPDFAndOCR(getCurrentUser, downloadPDF, getOCRData, supabase) {
       try {
         loadingText.textContent = 'Checking authentication...';
         console.log('Getting current user...');
