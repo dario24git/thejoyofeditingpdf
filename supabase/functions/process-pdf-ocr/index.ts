@@ -9,6 +9,8 @@ const corsHeaders = {
 interface OCRRequest {
   pdfId: string;
   filePath: string;
+  test?: boolean;
+  testGoogleCloud?: boolean;
 }
 
 interface TextBlock {
@@ -40,6 +42,68 @@ Deno.serve(async (req) => {
   let supabaseClient: any;
 
   try {
+    // Parse request body first to check for test requests
+    console.log('Parsing request body...');
+    let requestBody: OCRRequest;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    // Handle test requests
+    if (requestBody.test) {
+      console.log('=== TEST REQUEST DETECTED ===');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Edge function is responding correctly',
+          timestamp: new Date().toISOString(),
+          environment: {
+            SUPABASE_URL: Deno.env.get('SUPABASE_URL') ? 'SET' : 'MISSING',
+            SUPABASE_SERVICE_ROLE_KEY: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'SET' : 'MISSING',
+          }
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
+    // Handle Google Cloud test requests
+    if (requestBody.testGoogleCloud) {
+      console.log('=== GOOGLE CLOUD TEST REQUEST ===');
+      
+      const googleEnv = {
+        GOOGLE_CLOUD_PROJECT_ID: Deno.env.get('GOOGLE_CLOUD_PROJECT_ID') ? 'SET' : 'MISSING',
+        GOOGLE_DOCUMENT_AI_PROCESSOR_ID: Deno.env.get('GOOGLE_DOCUMENT_AI_PROCESSOR_ID') ? 'SET' : 'MISSING',
+        GOOGLE_SERVICE_ACCOUNT_JSON: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON') ? 'SET (length: ' + (Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON')?.length || 0) + ')' : 'MISSING',
+        GOOGLE_CLOUD_API_KEY: Deno.env.get('GOOGLE_CLOUD_API_KEY') ? 'SET' : 'MISSING',
+        GOOGLE_CLOUD_LOCATION: Deno.env.get('GOOGLE_CLOUD_LOCATION') || 'NOT SET (using eu default)',
+      };
+
+      console.log('Google Cloud Environment:', googleEnv);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Google Cloud environment check completed',
+          googleCloudEnvironment: googleEnv,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -83,16 +147,6 @@ Deno.serve(async (req) => {
     user = authUser;
     console.log('User authenticated:', user.id, user.email);
 
-    // Parse request body
-    console.log('Parsing request body...');
-    let requestBody: OCRRequest;
-    try {
-      requestBody = await req.json();
-    } catch (parseError) {
-      console.error('Failed to parse request body:', parseError);
-      throw new Error('Invalid JSON in request body');
-    }
-    
     const { pdfId: requestPdfId, filePath } = requestBody;
     pdfId = requestPdfId;
 
@@ -260,15 +314,15 @@ async function processWithGoogleCloud(base64Content: string) {
   
   // Check for Google Cloud configuration
   const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID');
-  // CRITICAL FIX: Use proper location environment variable with EU default
-  const location = 'eu';
+  // Use environment variable or default to 'eu' for EU region
+  const location = Deno.env.get('GOOGLE_CLOUD_LOCATION') || 'eu';
   const processorId = Deno.env.get('GOOGLE_DOCUMENT_AI_PROCESSOR_ID');
   const serviceAccountJson = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON');
   const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
 
   console.log('Google Cloud configuration:');
   console.log('- Project ID:', projectId ? 'SET' : 'MISSING');
-  console.log('- Location:', location, '(using EU default if not set)');
+  console.log('- Location:', location);
   console.log('- Processor ID:', processorId ? 'SET' : 'MISSING');
   console.log('- Service Account JSON:', serviceAccountJson ? 'SET (length: ' + (serviceAccountJson?.length || 0) + ')' : 'MISSING');
   console.log('- API Key:', apiKey ? 'SET' : 'MISSING');
@@ -415,7 +469,7 @@ async function processWithVisionAPI(base64Content: string, projectId: string, ap
   return parseVisionAPIResponse(result);
 }
 
-// Completely rewritten access token function - no recursion
+// Simplified access token function - no recursion, no complex JWT handling
 async function getGoogleAccessToken(serviceAccount: any): Promise<string> {
   console.log('Getting Google access token...');
   
