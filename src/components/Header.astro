@@ -6,109 +6,37 @@ interface Props {
 const { showAuth = false } = Astro.props;
 ---
 
-<header class="bg-white shadow-sm border-b border-gray-200 relative z-50">
+<header class="bg-green shadow-sm border-b border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16 md:h-20">
+    <div class="flex justify-between items-center h-16">
       <!-- Logo with Artistic Touch -->
-      <div class="flex items-center flex-shrink-0">
-        <a href="/" class="flex items-center space-x-2 sm:space-x-3 group">
-          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
-            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex items-center">
+        <a href="/" class="flex items-center space-x-3 group">
+          <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
             </svg>
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm sm:text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight">
+          <div class="flex flex-col">
+            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               The Joy of Editing PDF
             </span>
-            <span class="text-xs text-gray-500 italic hidden sm:block">
-              Fix your documents with ease
-            </span>
+            <span class="text-xs text-gray-500 italic">Fix your documents with ease</span>
           </div>
         </a>
       </div>
 
-      <!-- Mobile Menu Button -->
+      <!-- Navigation -->
       {showAuth && (
-        <button 
-          id="mobile-menu-button"
-          class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-purple-600 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
-          aria-expanded="false"
-          aria-label="Toggle navigation menu"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-      )}
-
-      <!-- Desktop Navigation -->
-      {showAuth && (
-        <nav class="hidden md:flex items-center space-x-4">
+        <nav class="flex items-center space-x-4">
           <a href="/signin" class="text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-purple-50">
             🎪 Sign In
           </a>
-          <a href="/signup" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 lg:px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg">
+          <a href="/signup" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg">
             🎨 Create an account
           </a>
         </nav>
       )}
     </div>
-
-    <!-- Mobile Navigation Menu -->
-    {showAuth && (
-      <div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 bg-white">
-        <div class="px-2 pt-2 pb-3 space-y-1">
-          <a href="/signin" class="block px-3 py-2 rounded-md text-base text-center font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-colors">
-            🎪 Sign In
-          </a>
-          <a href="/signup" class="block px-3 py-2 rounded-md text-base font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-center">
-            🎨 Create an account
-          </a>
-        </div>
-      </div>
-    )}
   </div>
 </header>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    
-    if (mobileMenuButton && mobileMenu) {
-      mobileMenuButton.addEventListener('click', () => {
-        const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
-        
-        mobileMenuButton.setAttribute('aria-expanded', (!isExpanded).toString());
-        mobileMenu.classList.toggle('hidden');
-        
-        // Update button icon
-        const svg = mobileMenuButton.querySelector('svg');
-        if (svg) {
-          if (isExpanded) {
-            // Show hamburger icon
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
-          } else {
-            // Show close icon
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
-          }
-        }
-      });
-      
-      // Close mobile menu when clicking outside
-      document.addEventListener('click', (event) => {
-        if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
-          mobileMenu.classList.add('hidden');
-          mobileMenuButton.setAttribute('aria-expanded', 'false');
-          
-          // Reset to hamburger icon
-          const svg = mobileMenuButton.querySelector('svg');
-          if (svg) {
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
-          }
-        }
-      });
-    }
-  });
-</script>
