@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
   console.log('=== OCR EDGE FUNCTION CALLED ===');
   console.log('Method:', req.method);
   console.log('URL:', req.url);
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -324,7 +323,7 @@ async function processWithDocumentAI(base64Content: string, projectId: string, l
 
     // Get access token using service account
     console.log('Getting access token...');
-    const accessToken = await getAccessTokenSimple(serviceAccount);
+    const accessToken = await getAccessToken(serviceAccount);
     console.log('Access token obtained successfully');
 
     // Document AI endpoint
@@ -424,16 +423,19 @@ async function processWithVisionAPI(base64Content: string, projectId: string, ap
   return parseVisionAPIResponse(result);
 }
 
-// Simplified access token method using Google's OAuth2 endpoint directly
-async function getAccessTokenSimple(serviceAccount: any): Promise<string> {
-  console.log('Getting access token using simplified method...');
+// Proper JWT creation for Google Cloud service account authentication
+async function getAccessToken(serviceAccount: any): Promise<string> {
+  console.log('Creating JWT for Google Cloud authentication...');
   
   try {
-    // Use Google's metadata server approach for service accounts
-    // This is a more reliable method in cloud environments
-    
     const now = Math.floor(Date.now() / 1000);
     const expiry = now + 3600; // 1 hour
+    
+    // Create JWT header
+    const header = {
+      alg: 'RS256',
+      typ: 'JWT'
+    };
     
     // Create JWT payload
     const payload = {
@@ -444,14 +446,59 @@ async function getAccessTokenSimple(serviceAccount: any): Promise<string> {
       iat: now
     };
 
-    // For Deno environment, we'll use a different approach
-    // Try using the service account key directly with Google's token endpoint
+    // Encode header and payload
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    // Import the private key for signing
+    const privateKeyPem = serviceAccount.private_key;
+    if (!privateKeyPem) {
+      throw new Error('No private key found in service account');
+    }
+
+    // Convert PEM to proper format for Web Crypto API
+    const pemHeader = '-----BEGIN PRIVATE KEY-----';
+    const pemFooter = '-----END PRIVATE KEY-----';
+    const pemContents = privateKeyPem
+      .replace(pemHeader, '')
+      .replace(pemFooter, '')
+      .replace(/\s/g, '');
+
+    // Decode base64 to get the key data
+    const keyData = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+
+    // Import the key
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256'
+      },
+      false,
+      ['sign']
+    );
+
+    // Sign the JWT
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      cryptoKey,
+      new TextEncoder().encode(signingInput)
+    );
+
+    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+    const jwt = `${signingInput}.${encodedSignature}`;
+
+    console.log('JWT created successfully');
+
+    // Exchange JWT for access token
     const tokenRequest = {
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: await createSimpleJWT(serviceAccount, payload)
+      assertion: jwt
     };
 
-    console.log('Making token request to Google OAuth2...');
+    console.log('Exchanging JWT for access token...');
     
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -463,7 +510,7 @@ async function getAccessTokenSimple(serviceAccount: any): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Token request failed:', response.status, errorText);
+      console.error('Token exchange failed:', response.status, errorText);
       throw new Error(`Failed to get access token: ${response.status} - ${errorText}`);
     }
 
@@ -473,82 +520,8 @@ async function getAccessTokenSimple(serviceAccount: any): Promise<string> {
     return tokenData.access_token;
     
   } catch (error) {
-    console.error('Access token request failed:', error);
+    console.error('Access token creation failed:', error);
     throw new Error(`Failed to get access token: ${error.message}`);
-  }
-}
-
-// Create a simple JWT for service account authentication
-async function createSimpleJWT(serviceAccount: any, payload: any): Promise<string> {
-  console.log('Creating JWT for service account authentication...');
-  
-  try {
-    // Import the private key
-    const privateKeyPem = serviceAccount.private_key;
-    if (!privateKeyPem) {
-      throw new Error('No private key found in service account');
-    }
-
-    // Clean up the private key format
-    const cleanPrivateKey = privateKeyPem
-      .replace(/-----BEGIN PRIVATE KEY-----/, '')
-      .replace(/-----END PRIVATE KEY-----/, '')
-      .replace(/\s/g, '');
-
-    // Create header
-    const header = {
-      alg: 'RS256',
-      typ: 'JWT'
-    };
-
-    // Base64URL encode header and payload
-    const encodedHeader = base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-    
-    const signingInput = `${encodedHeader}.${encodedPayload}`;
-    
-    // For now, we'll try a different approach using Web Crypto API
-    try {
-      // Import the private key for signing
-      const keyData = Uint8Array.from(atob(cleanPrivateKey), c => c.charCodeAt(0));
-      
-      const cryptoKey = await crypto.subtle.importKey(
-        'pkcs8',
-        keyData,
-        {
-          name: 'RSASSA-PKCS1-v1_5',
-          hash: 'SHA-256'
-        },
-        false,
-        ['sign']
-      );
-
-      // Sign the JWT
-      const signature = await crypto.subtle.sign(
-        'RSASSA-PKCS1-v1_5',
-        cryptoKey,
-        new TextEncoder().encode(signingInput)
-      );
-
-      const encodedSignature = base64UrlEncode(new Uint8Array(signature));
-      
-      return `${signingInput}.${encodedSignature}`;
-      
-    } catch (cryptoError) {
-      console.error('Crypto signing failed:', cryptoError);
-      
-      // Fallback: try using a simpler approach
-      // This is not secure but might work for testing
-      console.log('Falling back to simple JWT creation...');
-      
-      // Create a basic JWT without proper signing (for testing only)
-      const basicSignature = base64UrlEncode('test-signature');
-      return `${signingInput}.${basicSignature}`;
-    }
-    
-  } catch (error) {
-    console.error('JWT creation failed:', error);
-    throw new Error(`Failed to create JWT: ${error.message}`);
   }
 }
 
