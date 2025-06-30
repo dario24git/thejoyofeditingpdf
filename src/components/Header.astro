@@ -8,7 +8,7 @@ const { showAuth = false } = Astro.props;
 
 <header class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/20 sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-wrap justify-between items-center py-4 md:py-0 md:h-16 gap-3">
+    <div class="flex justify-between items-center h-16">
       <!-- Logo with Enhanced Design -->
       <div class="flex items-center">
         <a href="/" class="flex items-center space-x-3 group">
@@ -26,16 +26,30 @@ const { showAuth = false } = Astro.props;
         </a>
       </div>
 
-      <!-- Navigation -->
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-purple-600 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <!-- Icon when menu is closed -->
+          <svg id="menu-closed-icon" class="block h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <!-- Icon when menu is open -->
+          <svg id="menu-open-icon" class="hidden h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Desktop Navigation -->
       {showAuth && (
-        <nav class="flex items-center space-x-2 md:space-x-4">
+        <nav class="hidden md:flex items-center space-x-4">
           <a href="/signin" class="group text-gray-600 hover:text-purple-600 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-purple-50">
             <span class="flex items-center">
               <svg class="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
               </svg>
-              <span class="hidden sm:inline">Sign In</span>
-              <span class="sm:hidden">🎪</span>
+              Sign In
             </span>
           </a>
           <a href="/signup" class="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -43,12 +57,75 @@ const { showAuth = false } = Astro.props;
               <svg class="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
               </svg>
-              <span class="hidden sm:inline">Create account</span>
-              <span class="sm:hidden">🎨</span>
+              Create account
             </span>
           </a>
         </nav>
       )}
     </div>
   </div>
+
+  <!-- Mobile menu, show/hide based on menu state -->
+  {showAuth && (
+    <div id="mobile-menu" class="hidden md:hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 bg-white/90 backdrop-blur-sm border-t border-white/20">
+        <a href="/signin" class="flex items-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 block px-3 py-3 rounded-xl text-base font-medium transition-colors">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+          </svg>
+          Sign In
+        </a>
+        <a href="/signup" class="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50 block px-3 py-3 rounded-xl text-base font-medium transition-colors">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+          </svg>
+          Create account
+        </a>
+        <a href="/" class="flex items-center text-gray-600 hover:text-purple-600 hover:bg-purple-50 block px-3 py-3 rounded-xl text-base font-medium transition-colors">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Home
+        </a>
+      </div>
+    </div>
+  )}
 </header>
+
+<script>
+  // Mobile menu toggle functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuClosedIcon = document.getElementById('menu-closed-icon');
+    const menuOpenIcon = document.getElementById('menu-open-icon');
+    
+    if (mobileMenuButton && mobileMenu && menuClosedIcon && menuOpenIcon) {
+      mobileMenuButton.addEventListener('click', () => {
+        // Toggle menu visibility
+        mobileMenu.classList.toggle('hidden');
+        
+        // Toggle icons
+        menuClosedIcon.classList.toggle('hidden');
+        menuOpenIcon.classList.toggle('hidden');
+        
+        // Update aria-expanded attribute
+        const isExpanded = mobileMenu.classList.contains('hidden') ? 'false' : 'true';
+        mobileMenuButton.setAttribute('aria-expanded', isExpanded);
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (event) => {
+        const isClickInsideMenu = mobileMenu.contains(event.target as Node);
+        const isClickOnButton = mobileMenuButton.contains(event.target as Node);
+        
+        if (!isClickInsideMenu && !isClickOnButton && !mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          menuClosedIcon.classList.remove('hidden');
+          menuOpenIcon.classList.add('hidden');
+          mobileMenuButton.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  });
+</script>
