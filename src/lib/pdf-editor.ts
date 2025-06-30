@@ -86,6 +86,11 @@ export class PDFEditor {
   private isPlacingField: boolean = false;
   private placementIndicator: HTMLElement | null = null;
   
+  // Text box placement
+  private pendingTextBoxConfig: any = null;
+  private isPlacingTextBox: boolean = false;
+  private textBoxPlacementIndicator: HTMLElement | null = null;
+  
   // Resize functionality
   private isResizing: boolean = false;
   private resizeHandle: string = '';
@@ -353,6 +358,11 @@ export class PDFEditor {
     if (this.isPlacingField && this.placementIndicator) {
       this.overlayContainer.appendChild(this.placementIndicator);
     }
+
+    // Re-add text box placement indicator if we're placing a text box
+    if (this.isPlacingTextBox && this.textBoxPlacementIndicator) {
+      this.overlayContainer.appendChild(this.textBoxPlacementIndicator);
+    }
   }
 
   private createTextOverlay(element: EditableTextElement): void {
@@ -374,7 +384,7 @@ export class PDFEditor {
     textDiv.style.overflow = 'hidden';
     textDiv.style.wordWrap = 'break-word';
     textDiv.style.whiteSpace = 'normal';
-    textDiv.style.pointerEvents = this.isModifyMode && !this.isPlacingField ? 'auto' : 'none';
+    textDiv.style.pointerEvents = this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox ? 'auto' : 'none';
     textDiv.style.padding = `${element.padding}px`;
     textDiv.style.margin = '0';
     textDiv.style.boxSizing = 'border-box';
@@ -527,7 +537,7 @@ export class PDFEditor {
         textDiv.appendChild(textContainer);
       }
       
-      if (this.isModifyMode && !this.isPlacingField) {
+      if (this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox) {
         textDiv.addEventListener('click', (e) => {
           e.stopPropagation();
           this.selectElement(element);
@@ -569,7 +579,7 @@ export class PDFEditor {
     fieldDiv.style.top = `${field.y}px`;
     fieldDiv.style.width = `${field.width}px`;
     fieldDiv.style.height = `${field.height}px`;
-    fieldDiv.style.pointerEvents = this.isModifyMode && !this.isPlacingField ? 'auto' : 'none';
+    fieldDiv.style.pointerEvents = this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox ? 'auto' : 'none';
     fieldDiv.dataset.fieldId = field.id;
 
     // Add field type indicator
@@ -590,7 +600,7 @@ export class PDFEditor {
     fieldDiv.appendChild(nameLabel);
 
     // Add interactive input for the field
-    if (this.isModifyMode && !this.isPlacingField) {
+    if (this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox) {
       this.addFormFieldInput(fieldDiv, field);
       
       fieldDiv.addEventListener('click', (e) => {
@@ -899,9 +909,20 @@ export class PDFEditor {
       console.log('Target:', e.target);
       console.log('Current target:', e.currentTarget);
       console.log('Is placing field:', this.isPlacingField);
+      console.log('Is placing text box:', this.isPlacingTextBox);
       console.log('Pending field config:', this.pendingFieldConfig);
+      console.log('Pending text box config:', this.pendingTextBoxConfig);
       console.log('Event phase:', e.eventPhase);
       console.log('Coordinates:', { x: e.offsetX, y: e.offsetY });
+
+      // CRITICAL: Handle text box placement with highest priority
+      if (this.isPlacingTextBox && this.pendingTextBoxConfig) {
+        console.log('🎯 HANDLING TEXT BOX PLACEMENT');
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleTextBoxPlacement(e);
+        return;
+      }
 
       // CRITICAL: Handle field placement with highest priority
       if (this.isPlacingField && this.pendingFieldConfig) {
@@ -914,7 +935,7 @@ export class PDFEditor {
       
       // Handle form field selection
       const fieldDiv = (e.target as HTMLElement).closest('[data-field-id]');
-      if (fieldDiv && this.isModifyMode && !this.isPlacingField) {
+      if (fieldDiv && this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox) {
         const fieldId = fieldDiv.getAttribute('data-field-id');
         const field = this.formFields.find(f => f.id === fieldId);
         if (field) {
@@ -927,7 +948,7 @@ export class PDFEditor {
       
       // Handle text element selection
       const elementDiv = (e.target as HTMLElement).closest('[data-element-id]');
-      if (elementDiv && this.isModifyMode && !this.isPlacingField) {
+      if (elementDiv && this.isModifyMode && !this.isPlacingField && !this.isPlacingTextBox) {
         const elementId = elementDiv.getAttribute('data-element-id');
         const element = this.editableElements.find(el => el.id === elementId);
         if (element) {
@@ -953,12 +974,14 @@ export class PDFEditor {
     this.overlayContainer.addEventListener('mousemove', (e) => {
       if (this.isPlacingField && this.pendingFieldConfig) {
         this.updatePlacementIndicator(e);
+      } else if (this.isPlacingTextBox && this.pendingTextBoxConfig) {
+        this.updateTextBoxPlacementIndicator(e);
       }
     });
 
     // Mouse enter/leave for placement mode
     this.overlayContainer.addEventListener('mouseenter', () => {
-      if (this.isPlacingField) {
+      if (this.isPlacingField || this.isPlacingTextBox) {
         this.overlayContainer.style.cursor = 'crosshair';
       }
     });
@@ -966,6 +989,9 @@ export class PDFEditor {
     this.overlayContainer.addEventListener('mouseleave', () => {
       if (this.isPlacingField && this.placementIndicator) {
         this.placementIndicator.style.display = 'none';
+      }
+      if (this.isPlacingTextBox && this.textBoxPlacementIndicator) {
+        this.textBoxPlacementIndicator.style.display = 'none';
       }
     });
 
@@ -1017,6 +1043,55 @@ export class PDFEditor {
       }
       typeIndicator.textContent = displayText;
       this.placementIndicator.appendChild(typeIndicator);
+    }
+  }
+
+  private updateTextBoxPlacementIndicator(e: MouseEvent): void {
+    if (!this.isPlacingTextBox || !this.pendingTextBoxConfig) return;
+
+    const rect = this.overlayContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (!this.textBoxPlacementIndicator) {
+      this.textBoxPlacementIndicator = document.createElement('div');
+      this.textBoxPlacementIndicator.className = 'absolute border-2 border-dashed border-purple-500 bg-purple-100 bg-opacity-30 pointer-events-none z-50';
+      this.textBoxPlacementIndicator.style.position = 'absolute';
+      this.overlayContainer.appendChild(this.textBoxPlacementIndicator);
+      
+      console.log('Created text box placement indicator');
+    }
+
+    // Show the indicator
+    this.textBoxPlacementIndicator.style.display = 'block';
+
+    // Position the indicator at mouse position (centered)
+    const indicatorX = Math.max(0, Math.min(x - this.pendingTextBoxConfig.width / 2, this.overlayContainer.offsetWidth - this.pendingTextBoxConfig.width));
+    const indicatorY = Math.max(0, Math.min(y - this.pendingTextBoxConfig.height / 2, this.overlayContainer.offsetHeight - this.pendingTextBoxConfig.height));
+
+    this.textBoxPlacementIndicator.style.left = `${indicatorX}px`;
+    this.textBoxPlacementIndicator.style.top = `${indicatorY}px`;
+    this.textBoxPlacementIndicator.style.width = `${this.pendingTextBoxConfig.width}px`;
+    this.textBoxPlacementIndicator.style.height = `${this.pendingTextBoxConfig.height}px`;
+
+    // Add type indicator if not already present
+    if (!this.textBoxPlacementIndicator.querySelector('.type-indicator')) {
+      const typeIndicator = document.createElement('div');
+      typeIndicator.className = 'type-indicator absolute -top-5 left-0 text-xs px-1 bg-purple-500 text-white rounded whitespace-nowrap';
+      typeIndicator.textContent = 'TEXT BOX';
+      this.textBoxPlacementIndicator.appendChild(typeIndicator);
+    }
+
+    // Add preview text if not already present
+    if (!this.textBoxPlacementIndicator.querySelector('.preview-text')) {
+      const previewText = document.createElement('div');
+      previewText.className = 'preview-text absolute inset-0 flex items-center justify-center text-xs text-purple-700 font-medium pointer-events-none';
+      previewText.style.fontSize = `${Math.min(this.pendingTextBoxConfig.fontSize, 12)}px`;
+      previewText.style.fontFamily = this.pendingTextBoxConfig.fontFamily;
+      previewText.textContent = this.pendingTextBoxConfig.text.length > 20 
+        ? this.pendingTextBoxConfig.text.substring(0, 20) + '...' 
+        : this.pendingTextBoxConfig.text;
+      this.textBoxPlacementIndicator.appendChild(previewText);
     }
   }
 
@@ -1072,6 +1147,86 @@ export class PDFEditor {
     console.log('🎉 Field placement completed successfully!');
   }
 
+  private handleTextBoxPlacement(e: MouseEvent): void {
+    console.log('🎯 PLACING TEXT BOX AT CLICK POSITION');
+    
+    if (!this.pendingTextBoxConfig || !this.isPlacingTextBox) {
+      console.error('❌ No pending text box config or not in placement mode');
+      return;
+    }
+
+    // Get click coordinates relative to overlay
+    const rect = this.overlayContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Center the text box at click position
+    const textBoxX = Math.max(0, Math.min(clickX - this.pendingTextBoxConfig.width / 2, this.overlayContainer.offsetWidth - this.pendingTextBoxConfig.width));
+    const textBoxY = Math.max(0, Math.min(clickY - this.pendingTextBoxConfig.height / 2, this.overlayContainer.offsetHeight - this.pendingTextBoxConfig.height));
+
+    console.log('Text box placement coordinates:', { clickX, clickY, textBoxX, textBoxY });
+    console.log('Text box config:', this.pendingTextBoxConfig);
+
+    // Create the text element
+    const element: EditableTextElement = {
+      id: `textbox-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: this.pendingTextBoxConfig.text,
+      x: textBoxX,
+      y: textBoxY,
+      width: this.pendingTextBoxConfig.width,
+      height: this.pendingTextBoxConfig.height,
+      fontSize: this.pendingTextBoxConfig.fontSize,
+      fontFamily: this.pendingTextBoxConfig.fontFamily,
+      color: this.pendingTextBoxConfig.color,
+      pageNumber: this.currentPage,
+      isEditing: false,
+      confidence: 1.0, // New text boxes have 100% confidence
+      originalText: this.pendingTextBoxConfig.text,
+      originalBoundingBox: {
+        x: textBoxX / this.scale,
+        y: textBoxY / this.scale,
+        width: this.pendingTextBoxConfig.width / this.scale,
+        height: this.pendingTextBoxConfig.height / this.scale
+      },
+      hasBeenModified: true, // Mark as modified since it's user-created
+      // Set base coordinates for proper scaling
+      baseX: textBoxX / this.scale,
+      baseY: textBoxY / this.scale,
+      baseWidth: this.pendingTextBoxConfig.width / this.scale,
+      baseHeight: this.pendingTextBoxConfig.height / this.scale,
+      baseFontSize: this.pendingTextBoxConfig.fontSize / this.scale,
+      // Apply all the formatting properties from config
+      textAlign: this.pendingTextBoxConfig.textAlign,
+      fontWeight: this.pendingTextBoxConfig.fontWeight,
+      fontStyle: this.pendingTextBoxConfig.fontStyle,
+      textDecoration: this.pendingTextBoxConfig.textDecoration,
+      lineHeight: this.pendingTextBoxConfig.lineHeight,
+      letterSpacing: this.pendingTextBoxConfig.letterSpacing,
+      backgroundColor: this.pendingTextBoxConfig.backgroundColor,
+      borderColor: this.pendingTextBoxConfig.borderColor,
+      borderWidth: this.pendingTextBoxConfig.borderWidth,
+      borderStyle: this.pendingTextBoxConfig.borderStyle,
+      padding: this.pendingTextBoxConfig.padding,
+      textTransform: this.pendingTextBoxConfig.textTransform
+    };
+
+    // Add to editable elements array
+    this.editableElements.push(element);
+    console.log('✅ Text box created and added:', element);
+    console.log('Total text elements:', this.editableElements.length);
+
+    // Reset placement mode
+    this.cancelTextBoxPlacement();
+    
+    // Select the newly created text box
+    this.selectElement(element);
+    
+    // Update overlay to show the new text box
+    this.updateOverlay();
+
+    console.log('🎉 Text box placement completed successfully!');
+  }
+
   setModifyMode(enabled: boolean): void {
     console.log('Setting modify mode:', enabled);
     this.isModifyMode = enabled;
@@ -1079,6 +1234,11 @@ export class PDFEditor {
     // Cancel field placement if exiting modify mode
     if (!enabled && this.isPlacingField) {
       this.cancelFieldPlacement();
+    }
+    
+    // Cancel text box placement if exiting modify mode
+    if (!enabled && this.isPlacingTextBox) {
+      this.cancelTextBoxPlacement();
     }
     
     // Clear selections when exiting modify mode
@@ -1131,6 +1291,11 @@ export class PDFEditor {
     this.updateOverlay();
   }
 
+  removeTextElement(elementId: string): void {
+    this.editableElements = this.editableElements.filter(element => element.id !== elementId);
+    this.updateOverlay();
+  }
+
   // CRITICAL FIX: Enhanced field placement method
   startFieldPlacement(fieldConfig: any): void {
     console.log('🚀 STARTING FIELD PLACEMENT');
@@ -1154,6 +1319,29 @@ export class PDFEditor {
     console.log('- Overlay cursor:', this.overlayContainer.style.cursor);
   }
 
+  // NEW: Text box placement method
+  startTextBoxPlacement(textBoxConfig: any): void {
+    console.log('🚀 STARTING TEXT BOX PLACEMENT');
+    console.log('Text box config received:', textBoxConfig);
+    
+    this.pendingTextBoxConfig = { ...textBoxConfig };
+    this.isPlacingTextBox = true;
+    
+    // Set cursor and visual feedback
+    this.overlayContainer.style.cursor = 'crosshair';
+    
+    // Remove any existing text box placement indicator
+    if (this.textBoxPlacementIndicator) {
+      this.textBoxPlacementIndicator.remove();
+      this.textBoxPlacementIndicator = null;
+    }
+    
+    console.log('✅ Text box placement mode activated');
+    console.log('- Pending config:', this.pendingTextBoxConfig);
+    console.log('- Is placing text box:', this.isPlacingTextBox);
+    console.log('- Overlay cursor:', this.overlayContainer.style.cursor);
+  }
+
   // CRITICAL FIX: Enhanced cancellation method
   cancelFieldPlacement(): void {
     console.log('🛑 CANCELLING FIELD PLACEMENT');
@@ -1169,6 +1357,23 @@ export class PDFEditor {
     }
     
     console.log('✅ Field placement cancelled');
+  }
+
+  // NEW: Text box placement cancellation method
+  cancelTextBoxPlacement(): void {
+    console.log('🛑 CANCELLING TEXT BOX PLACEMENT');
+    
+    this.isPlacingTextBox = false;
+    this.pendingTextBoxConfig = null;
+    this.overlayContainer.style.cursor = 'default';
+    
+    // Remove text box placement indicator
+    if (this.textBoxPlacementIndicator) {
+      this.textBoxPlacementIndicator.remove();
+      this.textBoxPlacementIndicator = null;
+    }
+    
+    console.log('✅ Text box placement cancelled');
   }
 
   async exportPDF(): Promise<Uint8Array> {
