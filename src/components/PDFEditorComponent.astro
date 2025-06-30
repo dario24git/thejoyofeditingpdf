@@ -529,13 +529,13 @@ const { pdfId, pdfName } = Astro.props;
         let downloadPDF, getOCRData, getCurrentUser, supabase, PDFEditor;
         
         try {
-          // Import modules using .js extension for TypeScript files (Astro convention)
+          // Import modules without .js extension for proper TypeScript resolution
           const modules = await Promise.all([
-            import('../lib/pdf.js'),
-            import('../lib/ocr.js'),
-            import('../lib/auth.js'),
-            import('../lib/supabase.js'),
-            import('../lib/pdf-editor.js')
+            import('../lib/pdf'),
+            import('../lib/ocr'),
+            import('../lib/auth'),
+            import('../lib/supabase'),
+            import('../lib/pdf-editor')
           ]);
           
           downloadPDF = modules[0].downloadPDF;
