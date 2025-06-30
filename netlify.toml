@@ -1,12 +1,9 @@
 [build]
   command = "npx astro build"
-  publish = "dist"
+  publish = "dist/client"
 
 [functions]
-  # Directory for Netlify functions (empty since we're using Supabase)
-  directory = "netlify/functions"
+  directory = "dist/server"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[build.environment]
+  NODE_VERSION = "18"
