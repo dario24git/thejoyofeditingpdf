@@ -530,7 +530,7 @@ const { pdfId, pdfName } = Astro.props;
         
         try {
           // Use proper TypeScript file extensions and paths that work with Astro
-          const modules = await Promise.all([
+          const modules = Promise.all([
             import('/src/lib/pdf.ts'),       
             import('/src/lib/ocr.ts'),       
             import('/src/lib/auth.ts'),      
