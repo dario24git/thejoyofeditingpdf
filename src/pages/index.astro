@@ -4,7 +4,35 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="The Joy of Editing PDF - Create Beautiful Documents">
-  <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+  <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative">
+    <!-- Bolt.new Badge -->
+    <div class="fixed top-4 right-4 z-50">
+      <a 
+        href="https://bolt.new" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="bolt-badge group block transform transition-all duration-300 hover:scale-110 hover:rotate-3"
+        aria-label="Visit Bolt.new"
+      >
+        <div class="relative">
+          <img 
+            src="/boltdotnew.png" 
+            alt="Bolt.new" 
+            class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-300 border-2 border-white/50 group-hover:border-purple-300"
+          />
+          <!-- Glow effect on hover -->
+          <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-sm"></div>
+          <!-- Pulse animation -->
+          <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400 to-pink-400 opacity-30 animate-ping group-hover:animate-none"></div>
+        </div>
+        <!-- Tooltip -->
+        <div class="absolute top-full right-0 mt-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+          Built with Bolt.new ⚡
+          <div class="absolute -top-1 right-3 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+        </div>
+      </a>
+    </div>
+
     <Header showAuth={true} />
     
     <!-- Hero Section -->
@@ -212,5 +240,35 @@ import Layout from '../layouts/Layout.astro';
   
   .animate-float-delayed {
     animation: float-delayed 3s ease-in-out infinite 1.5s;
+  }
+
+  /* Badge specific animations */
+  .bolt-badge {
+    animation: gentle-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes gentle-pulse {
+    0%, 100% { 
+      transform: scale(1) rotate(0deg);
+    }
+    50% { 
+      transform: scale(1.05) rotate(1deg);
+    }
+  }
+
+  /* Responsive adjustments for the badge */
+  @media (max-width: 640px) {
+    .bolt-badge {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .bolt-badge img {
+      width: 3rem;
+      height: 3rem;
+    }
   }
 </style>
