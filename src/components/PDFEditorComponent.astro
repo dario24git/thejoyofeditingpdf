@@ -527,7 +527,7 @@ const { pdfId, pdfName } = Astro.props;
 
         // First, configure PDF.js worker before loading any modules
         console.log('Configuring PDF.js worker...');
-        const pdfjsLib = await import('pdfjs-dist');
+        const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
         console.log('✅ PDF.js worker configured');
 
